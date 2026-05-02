@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Liz Melly – Arte Original | Fontana, California</title>
+<meta name="description" content="Arte original, retratos personalizados y proyectos comerciales. Liz Melly Fontecha – Fontana, California."/>
+<link rel="icon" href="favicon.ico"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+
+<!-- LIGHTBOX -->
+<div id="lb">
+  <div class="lbwrap">
+    <button class="lbx" onclick="closeLB()">✕</button>
+    <img id="lb-img" src="" alt="" style="display:none"/>
+    <video id="lb-vid" controls style="display:none;max-width:100%;max-height:80vh"></video>
+    <div class="lbcap" id="lb-cap"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adov">
+  <div class="adm">
+    <div class="adm-hd">
+      <span class="adm-ht">Panel de gestión · Liz Melly</span>
+      <button class="adm-x" onclick="closeAd()">✕</button>
+    </div>
+    <div class="adm-bd">
+      <div id="adlk" class="lksc">
+        <div class="lkic">🔒</div>
+        <div class="lklb">Acceso exclusivo</div>
+        <div class="lkrow">
+          <input class="lkin" type="password" placeholder="Contraseña" id="adpw"/>
+          <button class="lkgo" onclick="doLogin()">Entrar</button>
+        </div>
+        <div class="lker" id="ader"></div>
+      </div>
+      <div id="adpn" style="display:none">
+        <div class="adm-gr">
+          <div class="adm-o"><div class="adm-on">Destello Azul</div><select class="adm-sl"><option>✓ Disponible</option><option>Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="upFile(this)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on">Flor Poderosa</div><select class="adm-sl"><option>✓ Disponible</option><option>Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="upFile(this)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on">Instinto en Calma</div><select class="adm-sl"><option>Disponible</option><option>Vendida</option><option selected>✓ Reservada</option></select><button class="adm-up" onclick="upFile(this)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on">El secreto de tu mirada</div><select class="adm-sl"><option>Disponible</option><option selected>✓ Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="upFile(this)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on">El amor es conexión</div><select class="adm-sl"><option>✓ Disponible</option><option>Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="upFile(this)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on">Pura Vida</div><select class="adm-sl"><option>✓ Disponible</option><option>Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="upFile(this)">+ Subir / cambiar foto</button></div>
+        </div>
+        <div class="adm-ac">
+          <button class="abt">Guardar cambios</button>
+          <button class="abt s">+ Nueva obra</button>
+          <button class="abt s">Subir personalizados</button>
+          <button class="abt s">Subir videos</button>
+          <button class="abt s" onclick="closeAd();lockAd()">Cerrar sesión</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo"><img src="images/logo-signature-beige.png" alt="Liz Melly"/></a>
+  <div class="nl">
+    <a href="#coleccion"      data-es="Colección"      data-en="Collection">Colección</a>
+    <a href="#personalizados" data-es="Personalizados"  data-en="Commissions">Personalizados</a>
+    <a href="#servicios"      data-es="Servicios"       data-en="Services">Servicios</a>
+    <a href="#ventas"         data-es="Tienda"          data-en="Shop">Tienda</a>
+    <a href="#contacto"       data-es="Contacto"        data-en="Contact">Contacto</a>
+    <div class="lw" id="lw">
+      <button class="lbtn" onclick="togLang()"><span id="ll">🇨🇴 ES</span><span class="la" id="la">▾</span></button>
+      <div class="ldrop" id="ld">
+        <div class="lopt on" id="oes" onclick="setL('es')">🇨🇴 Español</div>
+        <div class="lopt"    id="oen" onclick="setL('en')">🇺🇸 English</div>
+      </div>
+    </div>
+    <button class="ag" onclick="openAd()" title="Admin">⚙</button>
+    <button class="cartbtn" onclick="togCart()">
+      <span data-es="Carrito" data-en="Cart">Carrito</span>
+      <span class="cartct" id="cc">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- OVERLAY para cerrar carrito al hacer clic afuera -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+
+<!-- CARRITO DROPDOWN -->
+<div class="cart-drop" id="cartDrop">
+  <div class="cd-head">
+    <div class="cd-htitle" data-es="Mi carrito" data-en="My cart">Mi carrito</div>
+    <button class="cd-hclose" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cd-items" id="cdItems">
+    <div class="cd-empty" data-es="El carrito está vacío" data-en="Cart is empty">El carrito está vacío</div>
+  </div>
+  <div class="cd-footer" id="cdFooter" style="display:none">
+    <div class="cd-ftotal">
+      <span class="cd-ftlbl" data-es="Total" data-en="Total">Total</span>
+      <span class="cd-ftamt" id="cdTotal">$0</span>
+    </div>
+    <button class="cd-fwa" onclick="sendWA()">
+      📱 <span data-es="Enviar pedido por WhatsApp" data-en="Send order via WhatsApp">Enviar pedido por WhatsApp</span>
+    </button>
+    <button class="cd-fclr" onclick="clearC()" data-es="Vaciar carrito" data-en="Clear cart">Vaciar carrito</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hs"><img src="images/obra-destello-azul.jpg"   alt="Destello Azul"/></div>
+  <div class="hs"><img src="images/obra-flor-poderosa.jpg"   alt="Flor Poderosa"/></div>
+  <div class="hs"><img src="images/obra-pura-vida.jpg"       alt="Pura Vida"/></div>
+  <div class="hfade"></div>
+  <div class="hc">
+    <div class="heye" data-es="Arte original · Retratos · Proyectos" data-en="Original Art · Portraits · Projects">Arte original · Retratos · Proyectos</div>
+    <h1 class="ht" data-es="Donde el color<br>cobra vida" data-en="Where color<br>comes alive">Donde el color<br>cobra vida</h1>
+    <p class="hsub" data-es="Fontana, California" data-en="Fontana, California">Fontana, California</p>
+    <div class="hdots"><div class="hd on"></div><div class="hd"></div><div class="hd"></div></div>
+    <div class="hbtns">
+      <a href="#coleccion" class="hbp" data-es="Ver colección"  data-en="View collection">Ver colección</a>
+      <a href="#contacto"  class="hbg" data-es="Encargar obra"  data-en="Commission a piece">Encargar obra</a>
+    </div>
+  </div>
+  <div class="hai"><div class="hail">Obra</div><div class="hain" id="han">Destello Azul</div></div>
+  <div class="hnum" id="hnum">01 / 03</div>
+</section>
+
+<!-- SOBRE MÍ -->
+<section class="about-s" id="sobre">
+  <p class="eyb" data-es="Sobre mí" data-en="About me">Sobre mí</p>
+  <h2 class="ttb" data-es="Liz Melly Fontecha" data-en="Liz Melly Fontecha">Liz Melly Fontecha</h2>
+  <div class="rlb"></div>
+  <blockquote class="qbar fu" data-es='"Cada pintura es una invitación a detenerse, observar y reconectar con sensaciones que ya viven dentro de nosotros."' data-en='"Each painting is an invitation to pause, observe, and reconnect with feelings that already live within us."'>"Cada pintura es una invitación a detenerse, observar y reconectar con sensaciones que ya viven dentro de nosotros."</blockquote>
+  <p class="btxt fu d1" data-es="Soy Liz Melly Fontecha, artista visual radicada en Fontana, California. Mi trabajo integra realismo y abstracción en retratos y composiciones que buscan crear conexión emocional. Decidí estudiar arte formalmente y continúo aprendiendo nuevas técnicas. Me interesa ese instante en que una figura comienza a tener vida a través del color y el movimiento — ese puente entre lo visible y lo emocional." data-en="I am Liz Melly Fontecha, a visual artist based in Fontana, California. My work integrates realism and abstraction in portraits and compositions that seek to create emotional connection. I studied art formally and continue learning new techniques. I am drawn to the instant when a figure begins to come alive through color and movement — that bridge between the visible and the emotional.">Soy Liz Melly Fontecha, artista visual radicada en Fontana, California. Mi trabajo integra realismo y abstracción en retratos y composiciones que buscan crear conexión emocional. Decidí estudiar arte formalmente y continúo aprendiendo nuevas técnicas. Me interesa ese instante en que una figura comienza a tener vida a través del color y el movimiento — ese puente entre lo visible y lo emocional.</p>
+</section>
+
+<!-- COLECCIÓN -->
+<section class="gal-s" id="coleccion">
+  <div class="gal-hd">
+    <p class="eyb" data-es="Galería" data-en="Gallery">Galería</p>
+    <h2 class="ttb" data-es="Colección Original" data-en="Original Collection">Colección Original</h2>
+    <div class="rlb"></div>
+  </div>
+  <div class="am">
+    <div class="ac" onclick="addC('Destello Azul (original)',200)">
+      <div class="acb"><img src="images/obra-destello-azul.jpg" alt="Destello Azul"/></div>
+      <div class="acov"><div class="acn">Destello Azul</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Acrílico · 20&quot;×24&quot;" data-en="Available · Acrylic · 20&quot;×24&quot;">Disponible · Acrílico · 20"×24"</span></div></div>
+      <div class="achov"><div class="ahlb" data-es="Precio original" data-en="Original price">Precio original</div><div class="ahp">$200</div><button class="ahct">+ Carrito</button></div>
+    </div>
+    <div class="ac" onclick="addC('Flor Poderosa (original)',250)">
+      <div class="acb"><img src="images/obra-flor-poderosa.jpg" alt="Flor Poderosa"/></div>
+      <div class="acov"><div class="acn">Flor Poderosa</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Aceite · Gran formato" data-en="Available · Oil · Large format">Disponible · Aceite · Gran formato</span></div></div>
+      <div class="achov"><div class="ahlb" data-es="Precio original" data-en="Original price">Precio original</div><div class="ahp">$250</div><button class="ahct">+ Carrito</button></div>
+    </div>
+    <div class="ac" onclick="openLB('images/obra-instinto-en-calma.jpg','Instinto en Calma')">
+      <div class="acb"><img src="images/obra-instinto-en-calma.jpg" alt="Instinto en Calma"/></div>
+      <div class="acov"><div class="acn">Instinto en Calma</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Acrílico · 16&quot;×20&quot;" data-en="Available · Acrylic · 16&quot;×20&quot;">Disponible · Acrílico · 16"×20"</span></div></div>
+      <div class="achov"><div class="ahlb" data-es="Estado" data-en="Status">Estado</div><div class="ahp" style="font-size:22px" data-es="Reservada" data-en="Reserved">Reservada</div></div>
+    </div>
+    <div class="ac" onclick="openLB('images/obra-secreto-mirada.jpg','El secreto de tu mirada')">
+      <div class="acb"><img src="images/obra-secreto-mirada.jpg" alt="El secreto de tu mirada"/></div>
+      <div class="acov"><div class="acn">El secreto de tu mirada</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Acrílico · 11&quot;×14&quot;" data-en="Available · Acrylic · 11&quot;×14&quot;">Disponible · Acrílico · 11"×14"</span></div></div>
+      <div class="achov"><div class="ahlb" data-es="Estado" data-en="Status">Estado</div><div class="ahp" style="font-size:22px" data-es="Vendida" data-en="Sold">Vendida</div></div>
+    </div>
+    <div class="ac" onclick="addC('El amor es conexión (original)',100)">
+      <div class="acb"><img src="images/obra-amor-conexion.jpg" alt="El amor es conexión"/></div>
+      <div class="acov"><div class="acn">El amor es conexión</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Acrílico y aceite · 16&quot;×16&quot;" data-en="Available · Acrylic &amp; oil · 16&quot;×16&quot;">Disponible · Acrílico y aceite · 16"×16"</span></div></div>
+      <div class="achov"><div class="ahlb" data-es="Precio original" data-en="Original price">Precio original</div><div class="ahp">$100</div><button class="ahct">+ Carrito</button></div>
+    </div>
+    <div class="ac" onclick="addC('Pura Vida (original)',200)">
+      <div class="acb"><img src="images/obra-pura-vida.jpg" alt="Pura Vida"/></div>
+      <div class="acov"><div class="acn">Pura Vida</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Acrílico · 20&quot;×24&quot;" data-en="Available · Acrylic · 20&quot;×24&quot;">Disponible · Acrílico · 20"×24"</span></div></div>
+      <div class="achov"><div class="ahlb" data-es="Precio original" data-en="Original price">Precio original</div><div class="ahp">$200</div><button class="ahct">+ Carrito</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- PERSONALIZADOS -->
+<section class="sec-b" id="personalizados">
+  <p class="eyi" data-es="Trabajos realizados" data-en="Completed works">Trabajos realizados</p>
+  <h2 class="tti" data-es="Personalizados" data-en="Custom Pieces">Personalizados</h2>
+  <div class="rli"></div>
+  <p style="font-family:var(--fn);font-size:12px;color:rgba(232,220,207,.42);font-style:italic;margin-bottom:20px" data-es="Retratos únicos por encargo · Solo exhibición · No están en venta" data-en="Unique commissioned pieces · Display only · Not for sale">Retratos únicos por encargo · Solo exhibición · No están en venta</p>
+  <div class="pgr">
+    <div class="pc fu"   onclick="openLB('images/ABUELITO.jpeg','Retrato · 2025')"><img src="images/ABUELITO.jpeg" alt="Retrato"/><div class="pcov"><div class="ptag" data-es="Retrato · 2025" data-en="Portrait · 2025">Retrato · 2025</div></div></div>
+    <div class="pc fu d1" onclick="openLB('images/HERMANA.jpeg','Familia · 2025')"><img src="images/HERMANA.jpeg" alt="Familia"/><div class="pcov"><div class="ptag" data-es="Familia · 2025" data-en="Family · 2025">Familia · 2025</div></div></div>
+    <div class="pc fu d2" onclick="openLB('images/JESUS.jpeg','Retrato · 2026')"><img src="images/JESUS.jpeg" alt="Retrato"/><div class="pcov"><div class="ptag" data-es="Retrato · 2026" data-en="Portrait · 2026">Retrato · 2026</div></div></div>
+    <div class="pc fu d3" onclick="openLB('images/MASCOTAS.jpeg','Mascotas · 2024')"><img src="images/MASCOTAS.jpeg" alt="Mascotas"/><div class="pcov"><div class="ptag" data-es="Mascotas · 2024" data-en="Pets · 2024">Mascotas · 2024</div></div></div>
+    <div class="pc fu d3" onclick="openLB('images/MASCOTAS2.jpeg','Mascotas · 2025')"><img src="images/MASCOTAS2.jpeg" alt="Mascotas"/><div class="pcov"><div class="ptag" data-es="Mascotas · 2025" data-en="Pets · 2025">Mascotas · 2025</div></div></div>
+  </div>
+</section>
+
+<!-- PROPUESTA -->
+<section class="sec-cr" id="servicios">
+  <p class="eyb" data-es="Mi trabajo" data-en="My work">Mi trabajo</p>
+  <h2 class="ttb" data-es="Propuesta Artística" data-en="Artistic Offer">Propuesta Artística</h2>
+  <div class="rlb"></div>
+  <div class="prop-gr">
+    <div class="pk fu"><div class="pio">✦</div><div class="pn" data-es="Obras originales" data-en="Original works">Obras originales</div><p class="pd" data-es="Piezas únicas en gran formato. Acrílico y aceite sobre lienzo. Con certificado de autenticidad." data-en="Unique large-format pieces. Acrylic and oil on canvas. Certificate of authenticity included.">Piezas únicas en gran formato. Acrílico y aceite sobre lienzo. Con certificado de autenticidad.</p></div>
+    <div class="pk fu d1"><div class="pio">◎</div><div class="pn" data-es="Retratos por encargo" data-en="Commissioned portraits">Retratos por encargo</div><p class="pd" data-es="Desde fotografía. Realismo con intervención abstracta contemporánea. Entrega en 3–4 semanas." data-en="From photography. Realism with contemporary abstract intervention. 3–4 week delivery.">Desde fotografía. Realismo con intervención abstracta contemporánea. Entrega en 3–4 semanas.</p></div>
+    <div class="pk fu d2"><div class="pio">◈</div><div class="pn" data-es="Proyectos comerciales" data-en="Commercial projects">Proyectos comerciales</div><p class="pd" data-es="Arte para negocios, restaurantes y espacios. Murales y colecciones a medida." data-en="Art for businesses, restaurants and spaces. Murals and custom collections.">Arte para negocios, restaurantes y espacios. Murales y colecciones a medida.</p></div>
+  </div>
+</section>
+
+<!-- PROYECTOS ESPECIALES -->
+<section class="sec-dk" id="proyectos">
+  <p class="eyi" data-es="En movimiento" data-en="In motion">En movimiento</p>
+  <h2 class="tti" data-es="Proyectos Especiales" data-en="Special Projects">Proyectos Especiales</h2>
+  <div class="rli"></div>
+  <div class="vgr">
+    <div class="vc fu" onclick="openVid('images/video-rainforest-proceso.mp4','Proyecto Rainforest')"><div class="vth"><img src="images/obra-pura-vida.jpg" alt="Rainforest" style="object-position:center"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proyecto Rainforest" data-en="Rainforest Project">Proyecto Rainforest</div><div class="vmd">video</div></div></div>
+    <div class="vc fu d1" onclick="openVid('images/PROCESO2.mp4','Proceso · Obra en progreso')"><div class="vth"><img src="images/PROCESO.jpeg" alt="Proceso" style="object-position:top"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Obra en progreso" data-en="Process · Work in progress">Proceso · Obra en progreso</div><div class="vmd">video</div></div></div>
+    <div class="vc fu d2" onclick="openVid('images/PROCESO3.mp4','Proceso · Técnica y color')"><div class="vth"><img src="images/obra-destello-azul.jpg" alt="Proceso" style="object-position:center"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Técnica y color" data-en="Process · Technique &amp; color">Proceso · Técnica y color</div><div class="vmd">video</div></div></div>
+    <div class="vc fu" onclick="openVid('images/PROCESO4.mp4','Studio Tour · Fontana CA')"><div class="vth"><img src="images/obra-flor-poderosa.jpg" alt="Studio" style="object-position:top"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Studio tour · Fontana, CA" data-en="Studio tour · Fontana, CA">Studio tour · Fontana, CA</div><div class="vmd">video</div></div></div>
+    <div class="vc fu d1" onclick="openVid('images/PROCESO-HERMANA.mp4','Proceso · Retrato')"><div class="vth"><img src="images/HERMANA.jpeg" alt="Proceso Hermana" style="object-position:top"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Retrato" data-en="Process · Portrait">Proceso · Retrato</div><div class="vmd">video</div></div></div>
+    <div class="vc fu d2" onclick="openVid('images/FINCA-COLOMBIANA.mp4','Finca Colombiana')"><div class="vth"><img src="images/obra-amor-conexion.jpg" alt="Finca" style="object-position:center"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Finca Colombiana · Proyecto" data-en="Colombian Finca · Project">Finca Colombiana · Proyecto</div><div class="vmd">video</div></div></div>
+  </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section class="sec-bc">
+  <p class="eyb" data-es="Testimonios" data-en="Testimonials">Testimonios</p>
+  <h2 class="ttb" data-es="Clientes Felices" data-en="Happy Clients">Clientes Felices</h2>
+  <div class="rlb"></div>
+  <div class="tgr">
+    <div class="tc fu" onclick="openLB('images/CLIENTE-FELIZ.jpeg','Cliente feliz')">
+      <div class="tph">
+        <img src="images/CLIENTE-FELIZ.jpeg" alt="Cliente" style="object-position:center bottom"/>
+        <div class="tov"><div class="tq"><div class="tqt">"Un retrato que nos robó el corazón. Lo capturó perfectamente."</div><div class="tqn">— Cliente satisfecha</div></div></div>
+      </div>
+    </div>
+    <div class="tc fu d1" onclick="openLB('images/ELLA-MISMA.jpeg','Cliente feliz')">
+      <div class="tph">
+        <img src="images/ELLA-MISMA.jpeg" alt="Cliente" style="object-position:center 40%"/>
+        <div class="tov"><div class="tq"><div class="tqt">"Arte que vive en nuestra sala. Cada quien ve algo diferente."</div><div class="tqn">— Cliente satisfecha</div></div></div>
+      </div>
+    </div>
+    <div class="tc fu d2" onclick="openVid('images/CLIENTE-FELIZ-2.mp4','Testimonio en video')">
+      <div class="tph"><div class="tvid"><div class="vplaybtn" style="width:48px;height:48px;font-size:18px">▶</div><div style="font-family:var(--fd);font-style:italic;font-size:14px;color:rgba(232,220,207,.6);margin-top:8px" data-es="Video testimonio" data-en="Video testimonial">Video testimonio</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- VENTAS -->
+<section class="sec-cr" id="ventas">
+  <p class="eyb" data-es="Tienda" data-en="Shop">Tienda</p>
+  <h2 class="ttb" data-es="Ventas" data-en="Shop">Ventas</h2>
+  <div class="rlb"></div>
+  <div class="tabs">
+    <button class="vtab on" onclick="showT('ori',this)" data-es="Originales" data-en="Originals">Originales</button>
+    <button class="vtab"    onclick="showT('prt',this)" data-es="Prints"     data-en="Prints">Prints</button>
+  </div>
+  <div class="tpane on" id="tp-ori">
+    <div class="sgr">
+      <div class="sk"><div class="ski" onclick="openLB('images/obra-destello-azul.jpg','Destello Azul')" style="cursor:pointer"><img src="images/obra-destello-azul.jpg" alt="Destello Azul" style="object-position:center"/></div><div class="si"><div class="sn">Destello Azul</div><div class="ssz">20"×24" · Acrílico · Espátula y pincel</div><div class="spr">$200</div><button class="sadd" onclick="addC('Destello Azul (original)',200)" data-es="+ Agregar al carrito" data-en="+ Add to cart">+ Agregar al carrito</button></div></div>
+      <div class="sk"><div class="ski" onclick="openLB('images/obra-flor-poderosa.jpg','Flor Poderosa')" style="cursor:pointer"><img src="images/obra-flor-poderosa.jpg" alt="Flor Poderosa" style="object-position:top"/></div><div class="si"><div class="sn">Flor Poderosa (Medusa)</div><div class="ssz">Gran formato · Pintura en aceite</div><div class="spr">$250</div><button class="sadd" onclick="addC('Flor Poderosa (original)',250)" data-es="+ Agregar al carrito" data-en="+ Add to cart">+ Agregar al carrito</button></div></div>
+      <div class="sk"><div class="ski" onclick="openLB('images/obra-instinto-en-calma.jpg','Instinto en Calma')" style="cursor:pointer"><img src="images/obra-instinto-en-calma.jpg" alt="Instinto en Calma" style="object-position:top"/></div><div class="si"><div class="sn">Instinto en Calma</div><div class="ssz">16"×20" · Acrílico · Pincelada sobre pincelada</div><div class="spr">$180</div><button class="sadd" onclick="addC('Instinto en Calma (original)',180)" data-es="+ Agregar al carrito" data-en="+ Add to cart">+ Agregar al carrito</button></div></div>
+      <div class="sk"><div class="ski" onclick="openLB('images/obra-secreto-mirada.jpg','El secreto de tu mirada')" style="cursor:pointer"><img src="images/obra-secreto-mirada.jpg" alt="El secreto de tu mirada" style="object-position:top"/></div><div class="si"><div class="sn">El secreto de tu mirada</div><div class="ssz">11"×14" · Acrílico · Capas</div><div class="spr">$130</div><button class="sadd" onclick="addC('El secreto de tu mirada (original)',130)" data-es="+ Agregar al carrito" data-en="+ Add to cart">+ Agregar al carrito</button></div></div>
+      <div class="sk"><div class="ski" onclick="openLB('images/obra-amor-conexion.jpg','El amor es conexión')" style="cursor:pointer"><img src="images/obra-amor-conexion.jpg" alt="El amor es conexión" style="object-position:center"/></div><div class="si"><div class="sn">El amor es conexión</div><div class="ssz">16"×16" · Acrílico y aceite</div><div class="spr">$100</div><button class="sadd" onclick="addC('El amor es conexión (original)',100)" data-es="+ Agregar al carrito" data-en="+ Add to cart">+ Agregar al carrito</button></div></div>
+      <div class="sk"><div class="ski" onclick="openLB('images/obra-pura-vida.jpg','Pura Vida')" style="cursor:pointer"><img src="images/obra-pura-vida.jpg" alt="Pura Vida" style="object-position:center"/></div><div class="si"><div class="sn">Pura Vida</div><div class="ssz">20"×24" · Acrílico · Capa sobre capa</div><div class="spr">$200</div><button class="sadd" onclick="addC('Pura Vida (original)',200)" data-es="+ Agregar al carrito" data-en="+ Add to cart">+ Agregar al carrito</button></div></div>
+    </div>
+  </div>
+  <div class="tpane" id="tp-prt">
+    <div class="print-obra-list">
+
+      <div class="poa">
+        <div class="poa-img" onclick="openLB('images/obra-instinto-en-calma.jpg','Instinto en Calma')">
+          <img src="images/obra-instinto-en-calma.jpg" alt="Instinto en Calma"/>
+        </div>
+        <div class="poa-info">
+          <div class="poa-name">Instinto en Calma</div>
+          <div class="poa-row"><span class="poa-sz">Print 16"×20"</span><span class="poa-pr">$30</span><button class="poa-btn" onclick="addC('Instinto en Calma — print 16×20',30)">+ Carrito</button></div>
+          <div class="poa-row"><span class="poa-sz">Print 8.5"×11"</span><span class="poa-pr">$20</span><button class="poa-btn" onclick="addC('Instinto en Calma — print 8.5×11',20)">+ Carrito</button></div>
+        </div>
+      </div>
+
+      <div class="poa">
+        <div class="poa-img" onclick="openLB('images/obra-pura-vida.jpg','Pura Vida')">
+          <img src="images/obra-pura-vida.jpg" alt="Pura Vida"/>
+        </div>
+        <div class="poa-info">
+          <div class="poa-name">Pura Vida</div>
+          <div class="poa-row"><span class="poa-sz">Print 16"×20"</span><span class="poa-pr">$30</span><button class="poa-btn" onclick="addC('Pura Vida — print 16×20',30)">+ Carrito</button></div>
+          <div class="poa-row"><span class="poa-sz">Print 8.5"×11"</span><span class="poa-pr">$20</span><button class="poa-btn" onclick="addC('Pura Vida — print 8.5×11',20)">+ Carrito</button></div>
+        </div>
+      </div>
+
+      <div class="poa">
+        <div class="poa-img" onclick="openLB('images/obra-flor-poderosa.jpg','Flor Poderosa')">
+          <img src="images/obra-flor-poderosa.jpg" alt="Flor Poderosa"/>
+        </div>
+        <div class="poa-info">
+          <div class="poa-name">Flor Poderosa</div>
+          <div class="poa-row"><span class="poa-sz">Print 16"×20"</span><span class="poa-pr">$30</span><button class="poa-btn" onclick="addC('Flor Poderosa — print 16×20',30)">+ Carrito</button></div>
+          <div class="poa-row"><span class="poa-sz">Print 8.5"×11"</span><span class="poa-pr">$20</span><button class="poa-btn" onclick="addC('Flor Poderosa — print 8.5×11',20)">+ Carrito</button></div>
+        </div>
+      </div>
+
+      <div class="poa">
+        <div class="poa-img" onclick="openLB('images/obra-secreto-mirada.jpg','El secreto de tu mirada')">
+          <img src="images/obra-secreto-mirada.jpg" alt="El secreto de tu mirada"/>
+        </div>
+        <div class="poa-info">
+          <div class="poa-name">El secreto de tu mirada</div>
+          <div class="poa-row"><span class="poa-sz">Print 11"×14"</span><span class="poa-pr">$25</span><button class="poa-btn" onclick="addC('El secreto — print 11×14',25)">+ Carrito</button></div>
+          <div class="poa-row"><span class="poa-sz">Print 8.5"×11"</span><span class="poa-pr">$20</span><button class="poa-btn" onclick="addC('El secreto — print 8.5×11',20)">+ Carrito</button></div>
+        </div>
+      </div>
+
+      <div class="poa">
+        <div class="poa-img" onclick="openLB('images/obra-amor-conexion.jpg','Presencia')">
+          <img src="images/obra-amor-conexion.jpg" alt="Presencia"/>
+        </div>
+        <div class="poa-info">
+          <div class="poa-name">Presencia</div>
+          <div class="poa-row"><span class="poa-sz">Print 12"×12"</span><span class="poa-pr">$15</span><button class="poa-btn" onclick="addC('Presencia — print 12×12',15)">+ Carrito</button></div>
+        </div>
+      </div>
+
+      <div class="poa">
+        <div class="poa-img" onclick="openLB('images/obra-destello-azul.jpg','Destello Azul')">
+          <img src="images/obra-destello-azul.jpg" alt="Destello Azul"/>
+        </div>
+        <div class="poa-info">
+          <div class="poa-name">Destello Azul</div>
+          <div class="poa-row"><span class="poa-sz">Print 16"×20"</span><span class="poa-pr">$30</span><button class="poa-btn" onclick="addC('Destello Azul — print 16×20',30)">+ Carrito</button></div>
+          <div class="poa-row"><span class="poa-sz">Print 8.5"×11"</span><span class="poa-pr">$25</span><button class="poa-btn" onclick="addC('Destello Azul — print 8.5×11',25)">+ Carrito</button></div>
+        </div>
+      </div>
+
+    </div>
+    <p class="prnote" data-es="Todos los prints incluyen el nombre de la obra al reverso · Envío disponible · Fontana, CA" data-en="All prints include artwork name on the back · Shipping available · Fontana, CA">Todos los prints incluyen el nombre de la obra al reverso · Envío disponible · Fontana, CA</p>
+  </div>
+  <div class="cdr" id="cdr">
+    <div class="cdt"><div class="cdttl" data-es="Mi carrito" data-en="My cart">Mi carrito</div><button class="cdcl" onclick="clearC()" data-es="Vaciar" data-en="Clear">Vaciar</button></div>
+    <div id="cit"><div class="cde" data-es="El carrito está vacío" data-en="Cart is empty">El carrito está vacío</div></div>
+    <div class="ctrow"><span class="ctl" data-es="Total" data-en="Total">Total</span><span class="cta" id="ctot">$0</span></div>
+    <button class="wabtn" onclick="sendWA()">📱 <span data-es="Enviar pedido por WhatsApp" data-en="Send order via WhatsApp">Enviar pedido por WhatsApp</span></button>
+    <p class="cdnt">+1 (909) 329-7810 · Fontana, California</p>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section class="sec-bc" id="contacto">
+  <p class="eyb" data-es="Escríbeme" data-en="Write to me">Escríbeme</p>
+  <h2 class="ttb" data-es="Contacto" data-en="Contact">Contacto</h2>
+  <div class="rlb"></div>
+  <div class="cong">
+    <div>
+      <label class="fl" data-es="Nombre" data-en="Name">Nombre</label><input class="fi" id="fn" type="text" placeholder="Tu nombre completo"/>
+      <label class="fl" data-es="Correo" data-en="Email">Correo</label><input class="fi" id="fe" type="email" placeholder="tucorreo@email.com"/>
+      <label class="fl" data-es="Mensaje" data-en="Message">Mensaje</label><textarea class="fi fta" id="fm" placeholder="Cuéntame qué tienes en mente..."></textarea>
+      <button class="fsb" onclick="sendCon()" data-es="📱 Enviar por WhatsApp" data-en="📱 Send via WhatsApp">📱 Enviar por WhatsApp</button>
+    </div>
+    <div class="conr">
+      <div class="lizph" onclick="openLB('images/LIZ-MELLY.jpeg','Liz Melly Fontecha')">
+        <img src="images/LIZ-MELLY.jpeg" alt="Liz Melly Fontecha"/>
+      </div>
+      <div class="cib">
+        <span class="cil" data-es="Escríbeme directamente" data-en="Write to me directly">Escríbeme directamente</span>
+        <div class="cir"><div class="cid"></div><span>+1 (909) 329-7810</span></div>
+        <div class="cir"><div class="cid"></div><span>Fontana, California</span></div>
+        <div class="cir"><div class="cid"></div><span data-es="Respuesta en menos de 24 h" data-en="Response within 24 hours">Respuesta en menos de 24 h</span></div>
+        <div class="cir"><div class="cid"></div><span data-es="Encargos · Consultas · Proyectos" data-en="Commissions · Inquiries · Projects">Encargos · Consultas · Proyectos</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="foot">
+  <div class="fg">
+    <div class="fc"><div class="flogo"><img src="images/logo-signature-beige.png" alt="Liz Melly"/></div><p data-es="Arte original y retratos personalizados" data-en="Original art and custom portraits">Arte original y retratos personalizados</p><p>Fontana, California · 2026</p></div>
+    <div class="fc"><h4 data-es="Navegación" data-en="Navigation">Navegación</h4><a href="#coleccion" data-es="Colección" data-en="Collection">Colección</a><a href="#personalizados" data-es="Personalizados" data-en="Commissions">Personalizados</a><a href="#servicios" data-es="Propuesta Artística" data-en="Artistic Offer">Propuesta Artística</a><a href="#ventas" data-es="Tienda" data-en="Shop">Tienda</a><a href="#contacto" data-es="Contacto" data-en="Contact">Contacto</a></div>
+    <div class="fc"><h4>Contacto</h4><a href="https://wa.me/19093297810">+1 (909) 329-7810</a><a href="https://wa.me/19093297810">WhatsApp</a><p>Fontana, California</p></div>
+  </div>
+  <div class="fbot" data-es="© 2026 Liz Melly Fontecha · Arte original · Todos los derechos reservados" data-en="© 2026 Liz Melly Fontecha · Original art · All rights reserved">© 2026 Liz Melly Fontecha · Arte original · Todos los derechos reservados</div>
+</footer>
+
+<!-- WA FLOTANTE -->
+<a href="https://wa.me/19093297810" class="waf" target="_blank" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script src="js/main.js"></script>
+</body>
+</html>
