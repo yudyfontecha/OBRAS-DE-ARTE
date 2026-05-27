@@ -1,4 +1,23 @@
 /* ================================================
+   FIREBASE CONFIG — Liz Melly Arte
+   ================================================ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCtzBABHqZHqR_cndsJj22pREyorQ_qJXU",
+  authDomain: "liz-melly-arte-f8650.firebaseapp.com",
+  projectId: "liz-melly-arte-f8650",
+  storageBucket: "liz-melly-arte-f8650.appspot.com",
+  messagingSenderId: "678962654760",
+  appId: "1:678962654760:web:299079577d651893398f1d"
+};
+
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+
+/* ================================================
    LIZ MELLY FONTECHA — main.js
    ================================================ */
 
@@ -215,3 +234,108 @@ const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('v'); });
 }, {threshold:0.1});
 document.querySelectorAll('.fu').forEach(el => obs.observe(el));
+
+
+/* ── FIREBASE ADMIN FUNCTIONS ── */
+
+// Guardar cambios de estado de obras
+async function guardarCambios() {
+  try {
+    const selects = document.querySelectorAll('#adpn .adm-sl');
+    const obras = [
+      'Destello Azul',
+      'Flor Poderosa', 
+      'Instinto en Calma',
+      'El secreto de tu mirada',
+      'El amor es conexion',
+      'Pura Vida'
+    ];
+    
+    for (let i = 0; i < selects.length; i++) {
+      const estado = selects[i].value.replace('✓ ', '');
+      await setDoc(doc(db, 'obras', obras[i]), {
+        nombre: obras[i],
+        estado: estado
+      }, { merge: true });
+    }
+    
+    alert('✅ Cambios guardados correctamente');
+    location.reload();
+  } catch(e) {
+    alert('Error al guardar: ' + e.message);
+  }
+}
+
+// Cargar estados desde Firebase al abrir la página
+async function cargarEstados() {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'obras'));
+    querySnapshot.forEach((documento) => {
+      const data = documento.data();
+      // Actualizar estado visible en la galería y tienda
+      const nombre = data.nombre;
+      const estado = data.estado;
+      
+      // Actualizar dots de color en galería
+      document.querySelectorAll('.acs, .ai-sub, .ssz').forEach(el => {
+        if (el.closest('[onclick*="' + nombre + '"]') || 
+            el.parentElement?.querySelector('.sn')?.textContent?.includes(nombre)) {
+          const dot = el.querySelector('.sd, .sdot');
+          if (dot) {
+            dot.className = 'sd ' + (estado === 'Disponible' ? 'sdg' : estado === 'Reservada' ? 'sdy' : 'sdr');
+          }
+        }
+      });
+    });
+  } catch(e) {
+    console.log('Firebase no conectado aun:', e.message);
+  }
+}
+
+// Subir foto nueva desde admin
+async function subirFotoAdmin(btn, nombreObra) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    btn.textContent = 'Subiendo...';
+    btn.disabled = true;
+    
+    try {
+      // Usar Cloudinary para subir la foto
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'lizmelly_arte');
+      formData.append('cloud_name', 'dpdrjdv4n');
+      
+      const response = await fetch('https://api.cloudinary.com/v1_1/dpdrjdv4n/image/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const data = await response.json();
+      const imageUrl = data.secure_url;
+      
+      // Guardar URL en Firestore
+      await setDoc(doc(db, 'obras', nombreObra), {
+        nombre: nombreObra,
+        fotoUrl: imageUrl
+      }, { merge: true });
+      
+      btn.textContent = '✅ Foto subida';
+      alert('Foto de "' + nombreObra + '" actualizada correctamente. Recarga la página para verla.');
+      
+    } catch(error) {
+      btn.textContent = '+ Subir / cambiar foto';
+      btn.disabled = false;
+      alert('Error al subir: ' + error.message);
+    }
+  };
+  input.click();
+}
+
+// Cargar estados al iniciar
+cargarEstados();
