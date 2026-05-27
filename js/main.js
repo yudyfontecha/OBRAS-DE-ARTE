@@ -1,21 +1,26 @@
 /* ================================================
    FIREBASE CONFIG — Liz Melly Arte
    ================================================ */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCtzBABHqZHqR_cndsJj22pREyorQ_qJXU",
-  authDomain: "liz-melly-arte-f8650.firebaseapp.com",
-  projectId: "liz-melly-arte-f8650",
-  storageBucket: "liz-melly-arte-f8650.appspot.com",
-  messagingSenderId: "678962654760",
-  appId: "1:678962654760:web:299079577d651893398f1d"
-};
-
-const app  = initializeApp(firebaseConfig);
-const db   = getFirestore(app);
+// Firebase se carga desde el HTML via CDN scripts
+// db se inicializa cuando el DOM está listo
+let db;
+function initFirebase() {
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyCtzBABHqZHqR_cndsJj22pREyorQ_qJXU",
+      authDomain: "liz-melly-arte-f8650.firebaseapp.com",
+      projectId: "liz-melly-arte-f8650",
+      storageBucket: "liz-melly-arte-f8650.appspot.com",
+      messagingSenderId: "678962654760",
+      appId: "1:678962654760:web:299079577d651893398f1d"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch(e) {
+    console.log('Firebase init:', e.message);
+  }
+}
+window.addEventListener('DOMContentLoaded', initFirebase);
 
 /* ================================================
    LIZ MELLY FONTECHA — main.js
@@ -253,10 +258,10 @@ async function guardarCambios() {
     
     for (let i = 0; i < selects.length; i++) {
       const estado = selects[i].value.replace('✓ ', '');
-      await setDoc(doc(db, 'obras', obras[i]), {
+      await db.collection( 'obras', obras[i]), {
         nombre: obras[i],
         estado: estado
-      }, { merge: true });
+      .set({
     }
     
     alert('✅ Cambios guardados correctamente');
@@ -269,7 +274,7 @@ async function guardarCambios() {
 // Cargar estados desde Firebase al abrir la página
 async function cargarEstados() {
   try {
-    const querySnapshot = await getDocs(collection(db, 'obras'));
+    const querySnapshot = await db.collection('obras').get();
     querySnapshot.forEach((documento) => {
       const data = documento.data();
       // Actualizar estado visible en la galería y tienda
@@ -315,10 +320,10 @@ async function subirFotoAdmin(btn, nombreObra) {
       if (data.error) throw new Error(data.error.message);
       const imageUrl = data.secure_url;
       // Guardar URL en Firestore
-      await setDoc(doc(db, 'obras', nombreObra), {
+      await db.collection( 'obras', nombreObra), {
         nombre: nombreObra,
         fotoUrl: imageUrl
-      }, { merge: true });
+      .set({
       // Actualizar imagen en la página sin recargar
       document.querySelectorAll('img').forEach(img => {
         if (img.alt && img.alt.toLowerCase().includes(nombreObra.toLowerCase().substring(0,6))) {
@@ -361,7 +366,7 @@ function nuevaObraAdmin() {
     grid.appendChild(card);
   }
   // Guardar en Firestore
-  addDoc(collection(db, 'obras_nuevas'), {
+  db.collection('obras_nuevas').add({
     nombre, tecnica: tecnica||'', tamano: tamano||'', precio: Number(precio),
     estado: 'Disponible', fechaCreacion: new Date().toISOString()
   }).then(() => alert('✅ Obra "' + nombre + '" agregada. Recarga para verla completa.'))
@@ -389,7 +394,7 @@ function subirPersonalizados() {
         });
         const data = await res.json();
         if (!data.error) {
-          await addDoc(collection(db, 'personalizados'), {
+          await db.collection('personalizados').add({
             url: data.secure_url,
             nombre: file.name,
             fecha: new Date().toISOString()
@@ -426,7 +431,7 @@ function subirVideos() {
         });
         const data = await res.json();
         if (!data.error) {
-          await addDoc(collection(db, 'videos'), {
+          await db.collection('videos').add({
             url: data.secure_url,
             nombre: file.name,
             fecha: new Date().toISOString()
