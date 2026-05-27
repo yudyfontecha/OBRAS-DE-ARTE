@@ -292,7 +292,7 @@ async function cargarEstados() {
   }
 }
 
-// Subir foto nueva desde admin
+// Subir foto desde admin directo a Cloudinary
 async function subirFotoAdmin(btn, nombreObra) {
   const input = document.createElement('input');
   input.type = 'file';
@@ -300,39 +300,142 @@ async function subirFotoAdmin(btn, nombreObra) {
   input.onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+    const textoOriginal = btn.textContent;
     btn.textContent = 'Subiendo...';
     btn.disabled = true;
-    
     try {
-      // Usar Cloudinary para subir la foto
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', 'lizmelly_arte');
-      formData.append('cloud_name', 'dpdrjdv4n');
-      
       const response = await fetch('https://api.cloudinary.com/v1_1/dpdrjdv4n/image/upload', {
         method: 'POST',
         body: formData
       });
-      
       const data = await response.json();
+      if (data.error) throw new Error(data.error.message);
       const imageUrl = data.secure_url;
-      
       // Guardar URL en Firestore
       await setDoc(doc(db, 'obras', nombreObra), {
         nombre: nombreObra,
         fotoUrl: imageUrl
       }, { merge: true });
-      
+      // Actualizar imagen en la página sin recargar
+      document.querySelectorAll('img').forEach(img => {
+        if (img.alt && img.alt.toLowerCase().includes(nombreObra.toLowerCase().substring(0,6))) {
+          img.src = imageUrl;
+        }
+      });
       btn.textContent = '✅ Foto subida';
-      alert('Foto de "' + nombreObra + '" actualizada correctamente. Recarga la página para verla.');
-      
+      setTimeout(() => { btn.textContent = textoOriginal; btn.disabled = false; }, 3000);
+      alert('✅ Foto de "' + nombreObra + '" actualizada. Se ve en la página ahora mismo.');
     } catch(error) {
-      btn.textContent = '+ Subir / cambiar foto';
+      btn.textContent = textoOriginal;
       btn.disabled = false;
-      alert('Error al subir: ' + error.message);
+      alert('Error al subir foto: ' + error.message);
     }
+  };
+  input.click();
+}
+
+// Nueva obra
+function nuevaObraAdmin() {
+  const nombre = prompt('Nombre de la obra:');
+  if (!nombre) return;
+  const tecnica = prompt('Técnica (ej: Acrílico sobre lienzo):');
+  const tamano = prompt('Tamaño (ej: 20"×24"):');
+  const precio = prompt('Precio en dólares (ej: 200):');
+  if (!nombre || !precio) return;
+  // Agregar tarjeta visual en la tienda
+  const grid = document.getElementById('tp-ori')?.querySelector('.sgr');
+  if (grid) {
+    const card = document.createElement('div');
+    card.className = 'sk';
+    card.innerHTML = `
+      <div class="ski" style="background:var(--bc);display:flex;align-items:center;justify-content:center;color:var(--b);font-size:12px">Nueva obra</div>
+      <div class="si">
+        <div class="sn">${nombre}</div>
+        <div class="ssz">${tamano || ''} · ${tecnica || ''}</div>
+        <div class="spr">$${precio}</div>
+        <button class="sadd" onclick="addC('${nombre} (original)',${precio})">+ Agregar al carrito</button>
+      </div>`;
+    grid.appendChild(card);
+  }
+  // Guardar en Firestore
+  addDoc(collection(db, 'obras_nuevas'), {
+    nombre, tecnica: tecnica||'', tamano: tamano||'', precio: Number(precio),
+    estado: 'Disponible', fechaCreacion: new Date().toISOString()
+  }).then(() => alert('✅ Obra "' + nombre + '" agregada. Recarga para verla completa.'))
+    .catch(err => alert('Guardado localmente. Firebase: ' + err.message));
+}
+
+// Subir personalizados
+function subirPersonalizados() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = true;
+  input.onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    let subidos = 0;
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'lizmelly_arte');
+        formData.append('folder', 'personalizados');
+        const res = await fetch('https://api.cloudinary.com/v1_1/dpdrjdv4n/image/upload', {
+          method: 'POST', body: formData
+        });
+        const data = await res.json();
+        if (!data.error) {
+          await addDoc(collection(db, 'personalizados'), {
+            url: data.secure_url,
+            nombre: file.name,
+            fecha: new Date().toISOString()
+          });
+          subidos++;
+        }
+      } catch(err) { console.error(err); }
+    }
+    alert('✅ ' + subidos + ' foto(s) de personalizados subida(s) correctamente.');
+  };
+  input.click();
+}
+
+// Subir videos
+function subirVideos() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'video/*';
+  input.multiple = true;
+  input.onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    alert('Subiendo ' + files.length + ' video(s)... Esto puede tomar unos minutos.');
+    let subidos = 0;
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'lizmelly_arte');
+        formData.append('folder', 'videos');
+        formData.append('resource_type', 'video');
+        const res = await fetch('https://api.cloudinary.com/v1_1/dpdrjdv4n/video/upload', {
+          method: 'POST', body: formData
+        });
+        const data = await res.json();
+        if (!data.error) {
+          await addDoc(collection(db, 'videos'), {
+            url: data.secure_url,
+            nombre: file.name,
+            fecha: new Date().toISOString()
+          });
+          subidos++;
+        }
+      } catch(err) { console.error(err); }
+    }
+    alert('✅ ' + subidos + ' video(s) subido(s) correctamente.');
   };
   input.click();
 }
