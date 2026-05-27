@@ -4,16 +4,23 @@
    ================================================ */
 
 /* ── FIREBASE ── */
-const firebaseConfig = {
-  apiKey: "AIzaSyCtzBABHqZHqR_cndsJj22pREyorQ_qJXU",
-  authDomain: "liz-melly-arte-f8650.firebaseapp.com",
-  projectId: "liz-melly-arte-f8650",
-  storageBucket: "liz-melly-arte-f8650.appspot.com",
-  messagingSenderId: "678962654760",
-  appId: "1:678962654760:web:299079577d651893398f1d"
-};
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+let db;
+try {
+  const firebaseConfig = {
+    apiKey: "AIzaSyCtzBABHqZHqR_cndsJj22pREyorQ_qJXU",
+    authDomain: "liz-melly-arte-f8650.firebaseapp.com",
+    projectId: "liz-melly-arte-f8650",
+    storageBucket: "liz-melly-arte-f8650.appspot.com",
+    messagingSenderId: "678962654760",
+    appId: "1:678962654760:web:299079577d651893398f1d"
+  };
+  if (!firebase.apps || !firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  db = firebase.firestore();
+} catch(e) {
+  console.warn('Firebase no disponible:', e.message);
+}
 
 /* ── HERO ── */
 const arts = ['Destello Azul','Flor Poderosa','Pura Vida'];
