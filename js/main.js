@@ -190,161 +190,388 @@ function lockAd(){
 }
 document.getElementById('adpw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 
-/* ── ADMIN — GUARDAR ESTADOS EN FIREBASE ── */
-async function guardarCambios(){
-  const btn=event.target;
-  btn.textContent='Guardando...';
-  try {
-    const selects=document.querySelectorAll('#adpn .adm-sl');
-    const obras=['Destello Azul','Flor Poderosa','Instinto en Calma','El secreto de tu mirada','El amor es conexion','Pura Vida'];
-    for(let i=0;i<selects.length;i++){
-      const estado=selects[i].value.replace('✓ ','');
-      await db.collection('obras').doc(obras[i]).set({ nombre:obras[i], estado }, {merge:true});
+/* ══════════════════════════════════════════════════
+   ADMIN + FIREBASE — Capa de gestión (v2026-06)
+   Estados, fotos, obras nuevas, personalizados, videos
+   ══════════════════════════════════════════════════ */
+
+const ESTADO_TXT = {
+  'Disponible': { es:'Disponible', en:'Available' },
+  'Vendida':    { es:'Vendida',    en:'Sold' },
+  'Reservada':  { es:'Reservada',  en:'Reserved' }
+};
+const ESTADO_DOT = { 'Disponible':'sdg', 'Vendida':'sdr', 'Reservada':'sdy' };
+
+/* Registro de las 6 obras: nombre exacto + precio (para reconstruir el hover de la galería) */
+const OBRAS = {
+  'Destello Azul':            { precio:200 },
+  'Flor Poderosa':            { precio:250 },
+  'Instinto en Calma':        { precio:180 },
+  'El secreto de tu mirada':  { precio:130 },
+  'El amor es conexión':      { precio:100 },
+  'Pura Vida':                { precio:200 }
+};
+
+function tEstado(estado){ return (ESTADO_TXT[estado]||ESTADO_TXT['Disponible'])[lang]; }
+
+/* ── Aplica un estado en TODA la página: galería, tienda y admin ── */
+function aplicarEstadoUI(nombre, estado){
+  if(!OBRAS[nombre]) return;
+  const et = ESTADO_TXT[estado] || ESTADO_TXT['Disponible'];
+  const precio = OBRAS[nombre].precio;
+
+  /* 1. Galería */
+  document.querySelectorAll('.am .ac').forEach(card=>{
+    const n = card.querySelector('.acn');
+    if(!n || n.textContent.trim()!==nombre) return;
+    // Punto de color
+    const dot = card.querySelector('.acs .sd');
+    if(dot) dot.className = 'sd ' + (ESTADO_DOT[estado]||'sdg');
+    // Texto de estado (primera palabra antes del ·)
+    const txt = card.querySelector('.acs span:last-child');
+    if(txt){
+      const es0 = txt.getAttribute('data-es')||txt.textContent;
+      const en0 = txt.getAttribute('data-en')||txt.textContent;
+      const restoEs = es0.includes('·') ? es0.substring(es0.indexOf('·')) : '';
+      const restoEn = en0.includes('·') ? en0.substring(en0.indexOf('·')) : '';
+      txt.setAttribute('data-es', et.es+' '+restoEs);
+      txt.setAttribute('data-en', et.en+' '+restoEn);
+      txt.textContent = (lang==='es'?et.es+' '+restoEs:et.en+' '+restoEn);
     }
-    btn.textContent='✅ Guardado';
-    setTimeout(()=>{ btn.textContent='Guardar cambios'; location.reload(); },1500);
+    // Hover + clic
+    const hov = card.querySelector('.achov');
+    if(estado==='Disponible'){
+      if(hov) hov.innerHTML = `<div class="ahlb" data-es="Precio original" data-en="Original price">${lang==='es'?'Precio original':'Original price'}</div><div class="ahp">$${precio}</div><button class="ahct">+ Carrito</button>`;
+      card.onclick = ()=>addC(nombre+' (original)', precio);
+    } else {
+      if(hov) hov.innerHTML = `<div class="ahlb" data-es="Estado" data-en="Status">${lang==='es'?'Estado':'Status'}</div><div class="ahp" style="font-size:22px" data-es="${et.es}" data-en="${et.en}">${lang==='es'?et.es:et.en}</div>`;
+      const img = card.querySelector('.acb img');
+      card.onclick = ()=>openLB(img?img.src:'', nombre);
+    }
+  });
+
+  /* 2. Tienda (Originales) */
+  document.querySelectorAll('#tp-ori .sk').forEach(sk=>{
+    const n = sk.querySelector('.sn');
+    if(!n || !n.textContent.trim().toLowerCase().includes(nombre.toLowerCase().split(' (')[0].toLowerCase())) return;
+    // coincidencia estricta: el nombre de la obra debe estar contenido
+    if(!n.textContent.trim().toLowerCase().startsWith(nombre.toLowerCase().substring(0,10))) return;
+    const btn = sk.querySelector('.sadd');
+    if(!btn) return;
+    if(estado==='Disponible'){
+      btn.disabled = false;
+      btn.classList.remove('soff');
+      btn.setAttribute('data-es','+ Agregar al carrito');
+      btn.setAttribute('data-en','+ Add to cart');
+      btn.textContent = lang==='es'?'+ Agregar al carrito':'+ Add to cart';
+      btn.onclick = ()=>addC(nombre+' (original)', precio);
+    } else {
+      btn.disabled = true;
+      btn.classList.add('soff');
+      btn.setAttribute('data-es', et.es);
+      btn.setAttribute('data-en', et.en);
+      btn.textContent = lang==='es'?et.es:et.en;
+      btn.onclick = null;
+    }
+  });
+
+  /* 3. Select del admin */
+  document.querySelectorAll('#adpn .adm-o').forEach(card=>{
+    const n = card.querySelector('.adm-on');
+    if(n && n.textContent.trim()===nombre){
+      const sel = card.querySelector('.adm-sl');
+      if(sel) sel.value = estado;
+    }
+  });
+}
+
+/* ── Aplica una foto nueva (URL de Cloudinary) a todas las imágenes de esa obra ── */
+function aplicarFotoUI(nombre, url){
+  if(!url) return;
+  document.querySelectorAll('img[alt]').forEach(img=>{
+    if(img.alt.trim().toLowerCase()===nombre.trim().toLowerCase()) img.src = url;
+  });
+  // Galería y tienda usan alt exacto; lightbox onclick de tienda
+  document.querySelectorAll('#tp-ori .sk').forEach(sk=>{
+    const n = sk.querySelector('.sn');
+    if(n && n.textContent.trim().toLowerCase().startsWith(nombre.toLowerCase().substring(0,10))){
+      const img = sk.querySelector('.ski img'); if(img) img.src = url;
+      const ski = sk.querySelector('.ski'); if(ski) ski.onclick = ()=>openLB(url, nombre);
+    }
+  });
+}
+
+/* ── GUARDAR CAMBIOS (estados de las 6 obras + obras nuevas) ── */
+async function guardarCambios(btn){
+  if(!db){ alert('Sin conexión a la base de datos. Revise su internet y recargue la página.'); return; }
+  const original = btn.textContent;
+  btn.textContent = 'Guardando...'; btn.disabled = true;
+  try{
+    // Obras fijas
+    const cards = document.querySelectorAll('#adpn .adm-o');
+    for(const card of cards){
+      const nombre = card.querySelector('.adm-on').textContent.trim();
+      const estado = card.querySelector('.adm-sl').value;
+      await db.collection('obras').doc(nombre).set({ nombre, estado }, { merge:true });
+      aplicarEstadoUI(nombre, estado);
+    }
+    // Obras nuevas (las del contenedor dinámico)
+    const nuevas = document.querySelectorAll('#admNuevas .adm-o[data-id]');
+    for(const card of nuevas){
+      const id = card.getAttribute('data-id');
+      const estado = card.querySelector('.adm-sl').value;
+      await db.collection('obras_nuevas').doc(id).set({ estado }, { merge:true });
+    }
+    btn.textContent = '✅ Guardado';
+    setTimeout(()=>{ btn.textContent = original; btn.disabled = false; }, 2500);
   } catch(e){
-    btn.textContent='Guardar cambios';
+    btn.textContent = original; btn.disabled = false;
+    if(e.code==='permission-denied'){
+      alert('Firebase rechazó el cambio: las reglas de la base de datos expiraron. Hay que actualizarlas en la consola de Firebase (Firestore → Reglas).');
+    } else {
+      alert('Error al guardar: '+e.message);
+    }
+  }
+}
+
+/* ── Selector de archivos robusto (funciona en celular y todos los navegadores) ── */
+function pickFile(accept, multiple, callback){
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = accept;
+  if(multiple) input.multiple = true;
+  input.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+  document.body.appendChild(input);
+  input.addEventListener('change', e=>{
+    callback(e.target.files);
+    setTimeout(()=>input.remove(), 1000);
+  });
+  input.click();
+}
+
+async function subirACloudinary(file, tipo, folder){
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', 'lizmelly_arte');
+  if(folder) fd.append('folder', folder);
+  const res = await fetch('https://api.cloudinary.com/v1_1/dpdrjdv4n/'+(tipo||'image')+'/upload', { method:'POST', body:fd });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error.message);
+  return data.secure_url;
+}
+
+/* ── SUBIR / CAMBIAR FOTO de una obra existente ── */
+function subirFotoAdmin(btn, nombreObra){
+  nombreObra = nombreObra.trim();
+  pickFile('image/*', false, async(files)=>{
+    const file = files[0];
+    if(!file) return;
+    const original = btn.textContent;
+    btn.textContent = 'Subiendo...'; btn.disabled = true;
+    try{
+      const url = await subirACloudinary(file, 'image');
+      if(db) await db.collection('obras').doc(nombreObra).set({ nombre:nombreObra, fotoUrl:url }, { merge:true });
+      aplicarFotoUI(nombreObra, url);
+      btn.textContent = '✅ Foto actualizada';
+      setTimeout(()=>{ btn.textContent = original; btn.disabled = false; }, 3000);
+    } catch(err){
+      btn.textContent = original; btn.disabled = false;
+      alert('Error al subir la foto: '+err.message);
+    }
+  });
+}
+
+/* ── NUEVA OBRA ── */
+function nuevaObraAdmin(){
+  const modal = document.createElement('div');
+  modal.id = 'noModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:4px;padding:28px;width:100%;max-width:480px;font-family:var(--fn)">
+      <h3 style="font-family:var(--fd);font-style:italic;color:var(--b);font-size:22px;margin-bottom:20px">Nueva obra</h3>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Foto de la obra *</label>
+      <input id="no-foto" type="file" accept="image/*" style="width:100%;margin-bottom:14px;font-size:13px"/>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Nombre de la obra *</label>
+      <input id="no-nombre" type="text" placeholder="Ej: Amanecer" style="width:100%;padding:10px 12px;border:1px solid rgba(110,31,43,.2);font-size:14px;margin-bottom:12px;border-radius:1px;font-family:var(--fn)"/>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Técnica</label>
+      <input id="no-tecnica" type="text" placeholder="Ej: Acrílico sobre lienzo" style="width:100%;padding:10px 12px;border:1px solid rgba(110,31,43,.2);font-size:14px;margin-bottom:12px;border-radius:1px;font-family:var(--fn)"/>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Tamaño</label>
+      <input id="no-tamano" type="text" placeholder='Ej: 20"×24"' style="width:100%;padding:10px 12px;border:1px solid rgba(110,31,43,.2);font-size:14px;margin-bottom:12px;border-radius:1px;font-family:var(--fn)"/>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Precio ($) *</label>
+      <input id="no-precio" type="number" placeholder="Ej: 200" style="width:100%;padding:10px 12px;border:1px solid rgba(110,31,43,.2);font-size:14px;margin-bottom:20px;border-radius:1px;font-family:var(--fn)"/>
+      <div style="display:flex;gap:10px">
+        <button id="no-guardar" onclick="guardarNuevaObra(this)" style="flex:1;background:var(--b);color:#fff;padding:11px;font-family:var(--fn);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:1px;cursor:pointer">Guardar obra</button>
+        <button onclick="document.getElementById('noModal').remove()" style="flex:1;background:transparent;color:var(--b);padding:11px;font-family:var(--fn);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid rgba(110,31,43,.2);border-radius:1px;cursor:pointer">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function guardarNuevaObra(btn){
+  const nombre  = document.getElementById('no-nombre').value.trim();
+  const tecnica = document.getElementById('no-tecnica').value.trim();
+  const tamano  = document.getElementById('no-tamano').value.trim();
+  const precio  = document.getElementById('no-precio').value;
+  const foto    = document.getElementById('no-foto').files[0];
+  if(!nombre || !precio || !foto){ alert('La foto, el nombre y el precio son obligatorios.'); return; }
+  if(!db){ alert('Sin conexión a la base de datos. Revise su internet.'); return; }
+  btn.textContent = 'Subiendo...'; btn.disabled = true;
+  try{
+    const fotoUrl = await subirACloudinary(foto, 'image');
+    const datos = { nombre, tecnica, tamano, precio:Number(precio), fotoUrl, estado:'Disponible', fecha:new Date().toISOString() };
+    const ref = await db.collection('obras_nuevas').add(datos);
+    renderObraNueva(ref.id, datos);
+    document.getElementById('noModal').remove();
+    alert('✅ Obra "'+nombre+'" agregada. Ya aparece en la tienda.');
+  } catch(e){
+    btn.textContent = 'Guardar obra'; btn.disabled = false;
     alert('Error: '+e.message);
   }
 }
 
-/* ── ADMIN — SUBIR FOTO A CLOUDINARY ── */
-async function subirFotoAdmin(btn,nombreObra){
-  const input=document.createElement('input');
-  input.type='file'; input.accept='image/*';
-  input.onchange=async(e)=>{
-    const file=e.target.files[0];
-    if(!file) return;
-    const original=btn.textContent;
-    btn.textContent='Subiendo...'; btn.disabled=true;
-    try {
-      const fd=new FormData();
-      fd.append('file',file);
-      fd.append('upload_preset','lizmelly_arte');
-      const res=await fetch('https://api.cloudinary.com/v1_1/dpdrjdv4n/image/upload',{method:'POST',body:fd});
-      const data=await res.json();
-      if(data.error) throw new Error(data.error.message);
-      await db.collection('obras').doc(nombreObra).set({ fotoUrl:data.secure_url },{merge:true});
-      // Actualizar imagen en la página
-      document.querySelectorAll('img').forEach(img=>{
-        if(img.alt&&img.alt.toLowerCase().includes(nombreObra.toLowerCase().substring(0,5)))
-          img.src=data.secure_url;
-      });
-      btn.textContent='✅ Subida';
-      setTimeout(()=>{ btn.textContent=original; btn.disabled=false; },3000);
-    } catch(err){
-      btn.textContent=original; btn.disabled=false;
-      alert('Error al subir: '+err.message);
-    }
-  };
-  input.click();
-}
-
-/* ── ADMIN — NUEVA OBRA ── */
-function nuevaObraAdmin(){
-  const nombre=prompt('Nombre de la obra:');
-  if(!nombre) return;
-  const tecnica=prompt('Técnica (ej: Acrílico sobre lienzo):');
-  const tamano=prompt('Tamaño (ej: 20"×24"):');
-  const precio=prompt('Precio en dólares (solo el número, ej: 200):');
-  if(!precio) return;
-  const grid=document.getElementById('tp-ori')?.querySelector('.sgr');
-  if(grid){
-    const card=document.createElement('div');
-    card.className='sk';
-    card.innerHTML=`
-      <div class="ski" style="background:var(--bc);display:flex;align-items:center;justify-content:center;color:var(--b);font-size:12px;height:170px">${nombre}</div>
+/* Pinta una obra nueva en la tienda + en el panel admin */
+function renderObraNueva(id, d){
+  // Tienda → tab Originales
+  const grid = document.querySelector('#tp-ori .sgr');
+  if(grid && !document.getElementById('sk-'+id)){
+    const card = document.createElement('div');
+    card.className = 'sk'; card.id = 'sk-'+id;
+    const dispo = d.estado==='Disponible';
+    card.innerHTML = `
+      <div class="ski" style="cursor:pointer"><img src="${d.fotoUrl}" alt="${d.nombre}" style="object-position:center"/></div>
       <div class="si">
-        <div class="sn">${nombre}</div>
-        <div class="ssz">${tamano||''} · ${tecnica||''}</div>
-        <div class="spr">$${precio}</div>
-        <button class="sadd" onclick="addC('${nombre} (original)',${Number(precio)})">+ Agregar al carrito</button>
+        <div class="sn">${d.nombre}</div>
+        <div class="ssz">${[d.tamano,d.tecnica].filter(Boolean).join(' · ')}</div>
+        <div class="spr">$${d.precio}</div>
+        <button class="sadd${dispo?'':' soff'}" ${dispo?'':'disabled'}>${dispo?(lang==='es'?'+ Agregar al carrito':'+ Add to cart'):tEstado(d.estado)}</button>
       </div>`;
+    card.querySelector('.ski').onclick = ()=>openLB(d.fotoUrl, d.nombre);
+    if(dispo) card.querySelector('.sadd').onclick = ()=>addC(d.nombre+' (original)', d.precio);
     grid.appendChild(card);
+    artImg[d.nombre] = d.fotoUrl; // thumbnail en el carrito
   }
-  db.collection('obras_nuevas').add({
-    nombre, tecnica:tecnica||'', tamano:tamano||'', precio:Number(precio),
-    estado:'Disponible', fecha:new Date().toISOString()
-  }).then(()=>alert('✅ Obra "'+nombre+'" agregada correctamente.'))
-    .catch(err=>alert('Obra agregada localmente. Firebase: '+err.message));
+  // Admin
+  const adm = document.getElementById('admNuevas');
+  if(adm && !document.getElementById('adm-'+id)){
+    if(!adm.querySelector('.adm-nt')){
+      const t = document.createElement('div');
+      t.className = 'adm-nt';
+      t.style.cssText = 'font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);margin:18px 0 10px;opacity:.7';
+      t.textContent = 'Obras nuevas';
+      adm.appendChild(t);
+    }
+    const row = document.createElement('div');
+    row.className = 'adm-o'; row.id = 'adm-'+id;
+    row.setAttribute('data-id', id);
+    row.innerHTML = `
+      <div class="adm-on">${d.nombre}</div>
+      <select class="adm-sl">
+        <option value="Disponible"${d.estado==='Disponible'?' selected':''}>Disponible</option>
+        <option value="Vendida"${d.estado==='Vendida'?' selected':''}>Vendida</option>
+        <option value="Reservada"${d.estado==='Reservada'?' selected':''}>Reservada</option>
+      </select>
+      <button class="adm-up" onclick="eliminarObraNueva('${id}','${d.nombre.replace(/'/g,"\\'")}')" style="background:transparent;color:var(--b);border:1px solid rgba(110,31,43,.25)">Eliminar obra</button>`;
+    adm.appendChild(row);
+  }
 }
 
-/* ── ADMIN — SUBIR PERSONALIZADOS ── */
+async function eliminarObraNueva(id, nombre){
+  if(!confirm('¿Eliminar la obra "'+nombre+'"? Esta acción no se puede deshacer.')) return;
+  try{
+    if(db) await db.collection('obras_nuevas').doc(id).delete();
+    document.getElementById('sk-'+id)?.remove();
+    document.getElementById('adm-'+id)?.remove();
+  } catch(e){ alert('Error al eliminar: '+e.message); }
+}
+
+/* ── SUBIR PERSONALIZADOS (se muestran en la sección Personalizados) ── */
 function subirPersonalizados(){
-  const input=document.createElement('input');
-  input.type='file'; input.accept='image/*'; input.multiple=true;
-  input.onchange=async(e)=>{
-    const files=Array.from(e.target.files);
+  pickFile('image/*', true, async(fileList)=>{
+    const files = Array.from(fileList);
     if(!files.length) return;
-    let ok=0;
+    let ok = 0;
     for(const file of files){
-      try {
-        const fd=new FormData();
-        fd.append('file',file); fd.append('upload_preset','lizmelly_arte'); fd.append('folder','personalizados');
-        const res=await fetch('https://api.cloudinary.com/v1_1/dpdrjdv4n/image/upload',{method:'POST',body:fd});
-        const data=await res.json();
-        if(!data.error){
-          await db.collection('personalizados').add({ url:data.secure_url, nombre:file.name, fecha:new Date().toISOString() });
-          ok++;
-        }
+      try{
+        const url = await subirACloudinary(file, 'image', 'personalizados');
+        const ref = await db.collection('personalizados').add({ url, nombre:file.name, fecha:new Date().toISOString() });
+        renderPersonalizado(ref.id, url);
+        ok++;
       } catch(err){ console.error(err); }
     }
-    alert('✅ '+ok+' foto(s) de personalizados subida(s).');
-  };
-  input.click();
+    alert(ok ? '✅ '+ok+' foto(s) agregada(s) a Personalizados.' : 'No se pudo subir. Revise su internet.');
+  });
 }
 
-/* ── ADMIN — SUBIR VIDEOS ── */
+function renderPersonalizado(id, url){
+  const grid = document.querySelector('.pgr');
+  if(!grid || document.getElementById('pz-'+id)) return;
+  const base = grid.querySelector(':scope > *');
+  const card = document.createElement(base ? base.tagName : 'div');
+  if(base) card.className = base.className;
+  card.id = 'pz-'+id;
+  card.style.cursor = 'pointer';
+  card.innerHTML = `<img src="${url}" alt="Personalizado" style="width:100%;height:100%;object-fit:cover;display:block"/>`;
+  card.onclick = ()=>openLB(url, lang==='es'?'Personalizado':'Commission');
+  card.classList.add('v');
+  grid.appendChild(card);
+}
+
+/* ── SUBIR VIDEOS (se muestran en Proyectos Especiales) ── */
 function subirVideos(){
-  const input=document.createElement('input');
-  input.type='file'; input.accept='video/*'; input.multiple=true;
-  input.onchange=async(e)=>{
-    const files=Array.from(e.target.files);
+  pickFile('video/*', true, async(fileList)=>{
+    const files = Array.from(fileList);
     if(!files.length) return;
-    alert('Subiendo '+files.length+' video(s)... Esto puede tomar varios minutos.');
-    let ok=0;
+    alert('Subiendo '+files.length+' video(s)... No cierre la página. Esto puede tomar varios minutos.');
+    let ok = 0;
     for(const file of files){
-      try {
-        const fd=new FormData();
-        fd.append('file',file); fd.append('upload_preset','lizmelly_arte'); fd.append('folder','videos');
-        const res=await fetch('https://api.cloudinary.com/v1_1/dpdrjdv4n/video/upload',{method:'POST',body:fd});
-        const data=await res.json();
-        if(!data.error){
-          await db.collection('videos').add({ url:data.secure_url, nombre:file.name, fecha:new Date().toISOString() });
-          ok++;
-        }
+      try{
+        const url = await subirACloudinary(file, 'video', 'videos');
+        const ref = await db.collection('videos').add({ url, nombre:file.name, fecha:new Date().toISOString() });
+        renderVideoNuevo(ref.id, url, file.name);
+        ok++;
       } catch(err){ console.error(err); }
     }
-    alert('✅ '+ok+' video(s) subido(s) correctamente.');
-  };
-  input.click();
+    alert(ok ? '✅ '+ok+' video(s) agregado(s) a Proyectos Especiales.' : 'No se pudo subir. Revise su internet.');
+  });
 }
 
-/* ── CARGAR ESTADOS DESDE FIREBASE ── */
-async function cargarEstados(){
-  try {
-    const snap=await db.collection('obras').get();
-    snap.forEach(doc=>{
-      const d=doc.data();
-      // Actualizar selects en admin
-      document.querySelectorAll('#adpn .adm-o').forEach(card=>{
-        if(card.querySelector('.adm-on')?.textContent===d.nombre){
-          const sel=card.querySelector('.adm-sl');
-          if(sel) sel.value='✓ '+d.estado;
-        }
-      });
-      // Actualizar imagen si hay fotoUrl
-      if(d.fotoUrl){
-        document.querySelectorAll('img').forEach(img=>{
-          if(img.alt&&img.alt.toLowerCase().includes(d.nombre.toLowerCase().substring(0,5)))
-            img.src=d.fotoUrl;
-        });
-      }
-    });
-  } catch(e){ console.log('Firebase estados:',e.message); }
+function renderVideoNuevo(id, url, nombre){
+  const grid = document.querySelector('.vgr');
+  if(!grid || document.getElementById('vz-'+id)) return;
+  const titulo = (nombre||'Video').replace(/\.[^.]+$/,'').replace(/[-_]/g,' ');
+  const card = document.createElement('div');
+  card.className = 'vc v'; card.id = 'vz-'+id;
+  card.innerHTML = `
+    <div class="vth"><video src="${url}#t=0.5" preload="metadata" muted playsinline style="width:100%;height:100%;object-fit:cover;display:block"></video><div class="vplay"><div class="vplaybtn">▶</div></div></div>
+    <div class="vmeta"><div class="vmn">${titulo}</div><div class="vmd">video</div></div>`;
+  card.onclick = ()=>openVid(url, titulo);
+  grid.appendChild(card);
 }
-cargarEstados();
+
+/* ── CARGA INICIAL DESDE FIREBASE ── */
+async function cargarDesdeFirebase(){
+  if(!db) return;
+  try{
+    // Estados y fotos de las 6 obras
+    const snap = await db.collection('obras').get();
+    snap.forEach(doc=>{
+      const d = doc.data();
+      if(d.estado) aplicarEstadoUI(doc.id, d.estado);
+      if(d.fotoUrl) aplicarFotoUI(doc.id, d.fotoUrl);
+    });
+    // Obras nuevas
+    const nuevas = await db.collection('obras_nuevas').orderBy('fecha').get().catch(()=>db.collection('obras_nuevas').get());
+    nuevas.forEach(doc=>renderObraNueva(doc.id, doc.data()));
+    // Personalizados
+    const pers = await db.collection('personalizados').orderBy('fecha').get().catch(()=>db.collection('personalizados').get());
+    pers.forEach(doc=>renderPersonalizado(doc.id, doc.data().url));
+    // Videos
+    const vids = await db.collection('videos').orderBy('fecha').get().catch(()=>db.collection('videos').get());
+    vids.forEach(doc=>renderVideoNuevo(doc.id, doc.data().url, doc.data().nombre));
+  } catch(e){ console.warn('Firebase carga:', e.message); }
+}
+document.addEventListener('DOMContentLoaded', cargarDesdeFirebase);
+if(document.readyState!=='loading') cargarDesdeFirebase();
+
 
 /* ── SCROLL ANIMATIONS ── */
 const obs=new IntersectionObserver(entries=>{

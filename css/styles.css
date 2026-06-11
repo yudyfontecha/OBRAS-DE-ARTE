@@ -365,3 +365,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;background:var(--b);height:5
 /* overlay to close cart on outside click */
 .cart-overlay{position:fixed;inset:0;z-index:489;display:none}
 .cart-overlay.open{display:block}
+
+/* Botón de tienda cuando la obra no está disponible */
+.sadd.soff{background:transparent;color:var(--b);border:1px solid rgba(110,31,43,.25);cursor:default;opacity:.65}
+.sadd.soff:hover{background:transparent}

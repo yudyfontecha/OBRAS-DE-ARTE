@@ -42,15 +42,16 @@
       </div>
       <div id="adpn" style="display:none">
         <div class="adm-gr">
-          <div class="adm-o"><div class="adm-on" data-obra="Destello Azul">Destello Azul</div><select class="adm-sl"><option>✓ Disponible</option><option>Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
-          <div class="adm-o"><div class="adm-on" data-obra="Flor Poderosa">Flor Poderosa</div><select class="adm-sl"><option>✓ Disponible</option><option>Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
-          <div class="adm-o"><div class="adm-on" data-obra="Instinto en Calma">Instinto en Calma</div><select class="adm-sl"><option>Disponible</option><option>Vendida</option><option selected>✓ Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
-          <div class="adm-o"><div class="adm-on" data-obra="El secreto de tu mirada">El secreto de tu mirada</div><select class="adm-sl"><option>Disponible</option><option selected>✓ Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
-          <div class="adm-o"><div class="adm-on">El amor es conexión</div><select class="adm-sl"><option>✓ Disponible</option><option>Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
-          <div class="adm-o"><div class="adm-on" data-obra="Pura Vida">Pura Vida</div><select class="adm-sl"><option>✓ Disponible</option><option>Vendida</option><option>Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on" data-obra="Destello Azul">Destello Azul</div><select class="adm-sl"><option value="Disponible">Disponible</option><option value="Vendida">Vendida</option><option value="Reservada">Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on" data-obra="Flor Poderosa">Flor Poderosa</div><select class="adm-sl"><option value="Disponible">Disponible</option><option value="Vendida">Vendida</option><option value="Reservada">Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on" data-obra="Instinto en Calma">Instinto en Calma</div><select class="adm-sl"><option value="Disponible">Disponible</option><option value="Vendida">Vendida</option><option value="Reservada">Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on" data-obra="El secreto de tu mirada">El secreto de tu mirada</div><select class="adm-sl"><option value="Disponible">Disponible</option><option value="Vendida">Vendida</option><option value="Reservada">Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on" data-obra="El amor es conexión">El amor es conexión</div><select class="adm-sl"><option value="Disponible">Disponible</option><option value="Vendida">Vendida</option><option value="Reservada">Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
+          <div class="adm-o"><div class="adm-on" data-obra="Pura Vida">Pura Vida</div><select class="adm-sl"><option value="Disponible">Disponible</option><option value="Vendida">Vendida</option><option value="Reservada">Reservada</option></select><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
         </div>
+        <div id="admNuevas"></div>
         <div class="adm-ac">
-          <button class="abt" onclick="guardarCambios()">Guardar cambios</button>
+          <button class="abt" onclick="guardarCambios(this)">Guardar cambios</button>
           <button class="abt s" onclick="nuevaObraAdmin()">+ Nueva obra</button>
           <button class="abt s" onclick="subirPersonalizados()">Subir personalizados</button>
           <button class="abt s" onclick="subirVideos()">Subir videos</button>
@@ -156,15 +157,15 @@
       <div class="acov"><div class="acn">Flor Poderosa</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Aceite · Gran formato" data-en="Available · Oil · Large format">Disponible · Aceite · Gran formato</span></div></div>
       <div class="achov"><div class="ahlb" data-es="Precio original" data-en="Original price">Precio original</div><div class="ahp">$250</div><button class="ahct">+ Carrito</button></div>
     </div>
-    <div class="ac" onclick="openLB('images/obra-instinto-en-calma.jpg','Instinto en Calma')">
+    <div class="ac" onclick="addC('Instinto en Calma (original)',180)">
       <div class="acb"><img src="images/obra-instinto-en-calma.jpg" alt="Instinto en Calma"/></div>
       <div class="acov"><div class="acn">Instinto en Calma</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Acrílico · 16&quot;×20&quot;" data-en="Available · Acrylic · 16&quot;×20&quot;">Disponible · Acrílico · 16"×20"</span></div></div>
-      <div class="achov"><div class="ahlb" data-es="Estado" data-en="Status">Estado</div><div class="ahp" style="font-size:22px" data-es="Reservada" data-en="Reserved">Reservada</div></div>
+      <div class="achov"><div class="ahlb" data-es="Precio original" data-en="Original price">Precio original</div><div class="ahp">$180</div><button class="ahct">+ Carrito</button></div>
     </div>
-    <div class="ac" onclick="openLB('images/obra-secreto-mirada.jpg','El secreto de tu mirada')">
+    <div class="ac" onclick="addC('El secreto de tu mirada (original)',130)">
       <div class="acb"><img src="images/obra-secreto-mirada.jpg" alt="El secreto de tu mirada"/></div>
       <div class="acov"><div class="acn">El secreto de tu mirada</div><div class="acs"><span class="sd sdg"></span><span data-es="Disponible · Acrílico · 11&quot;×14&quot;" data-en="Available · Acrylic · 11&quot;×14&quot;">Disponible · Acrílico · 11"×14"</span></div></div>
-      <div class="achov"><div class="ahlb" data-es="Estado" data-en="Status">Estado</div><div class="ahp" style="font-size:22px" data-es="Vendida" data-en="Sold">Vendida</div></div>
+      <div class="achov"><div class="ahlb" data-es="Precio original" data-en="Original price">Precio original</div><div class="ahp">$130</div><button class="ahct">+ Carrito</button></div>
     </div>
     <div class="ac" onclick="addC('El amor es conexión (original)',100)">
       <div class="acb"><img src="images/obra-amor-conexion.jpg" alt="El amor es conexión"/></div>
