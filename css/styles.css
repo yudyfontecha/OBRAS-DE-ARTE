@@ -369,3 +369,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;background:var(--b);height:5
 /* Botón de tienda cuando la obra no está disponible */
 .sadd.soff{background:transparent;color:var(--b);border:1px solid rgba(110,31,43,.25);cursor:default;opacity:.65}
 .sadd.soff:hover{background:transparent}
+
+/* Admin: precio editable y botón ocultar */
+.adm-prw{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.adm-prl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--md);white-space:nowrap}
+.adm-pr{flex:1;width:100%;padding:6px 9px;border:1px solid rgba(110,31,43,.18);font-size:11px;font-family:var(--fn);color:var(--tx);background:#fff;border-radius:1px}
+.adm-oc{margin-bottom:8px}
+.adm-oc.on{border-style:solid;border-color:var(--b);color:var(--b);background:rgba(110,31,43,.06)}

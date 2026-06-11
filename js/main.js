@@ -204,19 +204,21 @@ const ESTADO_DOT = { 'Disponible':'sdg', 'Vendida':'sdr', 'Reservada':'sdy' };
 
 /* Registro de las 6 obras: nombre exacto + precio (para reconstruir el hover de la galería) */
 const OBRAS = {
-  'Destello Azul':            { precio:200 },
-  'Flor Poderosa':            { precio:250 },
-  'Instinto en Calma':        { precio:180 },
-  'El secreto de tu mirada':  { precio:130 },
-  'El amor es conexión':      { precio:100 },
-  'Pura Vida':                { precio:200 }
+  'Destello Azul':            { precio:200, estado:'Disponible', oculta:false },
+  'Flor Poderosa':            { precio:250, estado:'Disponible', oculta:false },
+  'Instinto en Calma':        { precio:180, estado:'Disponible', oculta:false },
+  'El secreto de tu mirada':  { precio:130, estado:'Disponible', oculta:false },
+  'El amor es conexión':      { precio:100, estado:'Disponible', oculta:false },
+  'Pura Vida':                { precio:200, estado:'Disponible', oculta:false }
 };
+const NUEVAS = {}; // obras nuevas en memoria: id → datos
 
 function tEstado(estado){ return (ESTADO_TXT[estado]||ESTADO_TXT['Disponible'])[lang]; }
 
 /* ── Aplica un estado en TODA la página: galería, tienda y admin ── */
 function aplicarEstadoUI(nombre, estado){
   if(!OBRAS[nombre]) return;
+  OBRAS[nombre].estado = estado;
   const et = ESTADO_TXT[estado] || ESTADO_TXT['Disponible'];
   const precio = OBRAS[nombre].precio;
 
@@ -256,6 +258,8 @@ function aplicarEstadoUI(nombre, estado){
     if(!n || !n.textContent.trim().toLowerCase().includes(nombre.toLowerCase().split(' (')[0].toLowerCase())) return;
     // coincidencia estricta: el nombre de la obra debe estar contenido
     if(!n.textContent.trim().toLowerCase().startsWith(nombre.toLowerCase().substring(0,10))) return;
+    const pr = sk.querySelector('.spr');
+    if(pr) pr.textContent = '$'+precio;
     const btn = sk.querySelector('.sadd');
     if(!btn) return;
     if(estado==='Disponible'){
@@ -275,14 +279,52 @@ function aplicarEstadoUI(nombre, estado){
     }
   });
 
-  /* 3. Select del admin */
+  /* 3. Select y precio del admin */
   document.querySelectorAll('#adpn .adm-o').forEach(card=>{
     const n = card.querySelector('.adm-on');
     if(n && n.textContent.trim()===nombre){
       const sel = card.querySelector('.adm-sl');
       if(sel) sel.value = estado;
+      const pr = card.querySelector('.adm-pr');
+      if(pr) pr.value = precio;
     }
   });
+}
+
+/* ── Ocultar / mostrar una obra fija en galería y tienda ── */
+function aplicarOcultaUI(nombre, oculta){
+  if(!OBRAS[nombre]) return;
+  OBRAS[nombre].oculta = !!oculta;
+  document.querySelectorAll('.am .ac').forEach(card=>{
+    const n = card.querySelector('.acn');
+    if(n && n.textContent.trim()===nombre) card.style.display = oculta?'none':'';
+  });
+  document.querySelectorAll('#tp-ori .sk').forEach(sk=>{
+    const n = sk.querySelector('.sn');
+    if(n && n.textContent.trim().toLowerCase().startsWith(nombre.toLowerCase().substring(0,10))) sk.style.display = oculta?'none':'';
+  });
+  // Botón del admin refleja el estado
+  document.querySelectorAll('#adpn .adm-o').forEach(card=>{
+    const n = card.querySelector('.adm-on');
+    if(n && n.textContent.trim()===nombre){
+      const b = card.querySelector('.adm-oc');
+      if(b){
+        b.textContent = oculta ? '👁 Mostrar en la página' : 'Ocultar de la página';
+        b.classList.toggle('on', !!oculta);
+      }
+    }
+  });
+}
+
+async function toggleOcultar(btn){
+  const nombre = btn.closest('.adm-o').querySelector('.adm-on').textContent.trim();
+  if(!OBRAS[nombre]) return;
+  const oculta = !OBRAS[nombre].oculta;
+  if(oculta && !confirm('¿Ocultar "'+nombre+'" de la galería y la tienda? Podrá volver a mostrarla cuando quiera. Los prints de esta obra seguirán a la venta.')) return;
+  try{
+    if(db) await db.collection('obras').doc(nombre).set({ nombre, oculta }, { merge:true });
+    aplicarOcultaUI(nombre, oculta);
+  } catch(e){ alert('Error: '+e.message); }
 }
 
 /* ── Aplica una foto nueva (URL de Cloudinary) a todas las imágenes de esa obra ── */
@@ -308,19 +350,25 @@ async function guardarCambios(btn){
   btn.textContent = 'Guardando...'; btn.disabled = true;
   try{
     // Obras fijas
-    const cards = document.querySelectorAll('#adpn .adm-o');
+    const cards = document.querySelectorAll('#adpn .adm-gr .adm-o');
     for(const card of cards){
       const nombre = card.querySelector('.adm-on').textContent.trim();
       const estado = card.querySelector('.adm-sl').value;
-      await db.collection('obras').doc(nombre).set({ nombre, estado }, { merge:true });
+      const prIn = card.querySelector('.adm-pr');
+      const precio = prIn && prIn.value!=='' ? Number(prIn.value) : OBRAS[nombre]?.precio;
+      if(OBRAS[nombre] && precio>=0) OBRAS[nombre].precio = precio;
+      await db.collection('obras').doc(nombre).set({ nombre, estado, precio }, { merge:true });
       aplicarEstadoUI(nombre, estado);
     }
-    // Obras nuevas (las del contenedor dinámico)
+    // Obras nuevas: estado + precio editables
     const nuevas = document.querySelectorAll('#admNuevas .adm-o[data-id]');
     for(const card of nuevas){
       const id = card.getAttribute('data-id');
       const estado = card.querySelector('.adm-sl').value;
-      await db.collection('obras_nuevas').doc(id).set({ estado }, { merge:true });
+      const prIn = card.querySelector('.adm-pr');
+      const precio = prIn && prIn.value!=='' ? Number(prIn.value) : (NUEVAS[id]?.precio||0);
+      await db.collection('obras_nuevas').doc(id).set({ estado, precio }, { merge:true });
+      if(NUEVAS[id]){ NUEVAS[id].estado=estado; NUEVAS[id].precio=precio; aplicarNuevaUI(id); }
     }
     btn.textContent = '✅ Guardado';
     setTimeout(()=>{ btn.textContent = original; btn.disabled = false; }, 2500);
@@ -428,8 +476,24 @@ async function guardarNuevaObra(btn){
   }
 }
 
+/* Refleja estado y precio de una obra nueva en su tarjeta de tienda */
+function aplicarNuevaUI(id){
+  const d = NUEVAS[id]; if(!d) return;
+  const sk = document.getElementById('sk-'+id); if(!sk) return;
+  const pr = sk.querySelector('.spr'); if(pr) pr.textContent = '$'+d.precio;
+  const btn = sk.querySelector('.sadd');
+  if(btn){
+    const dispo = d.estado==='Disponible';
+    btn.disabled = !dispo;
+    btn.classList.toggle('soff', !dispo);
+    btn.textContent = dispo ? (lang==='es'?'+ Agregar al carrito':'+ Add to cart') : tEstado(d.estado);
+    btn.onclick = dispo ? ()=>addC(d.nombre+' (original)', d.precio) : null;
+  }
+}
+
 /* Pinta una obra nueva en la tienda + en el panel admin */
 function renderObraNueva(id, d){
+  NUEVAS[id] = d;
   // Tienda → tab Originales
   const grid = document.querySelector('#tp-ori .sgr');
   if(grid && !document.getElementById('sk-'+id)){
@@ -469,6 +533,7 @@ function renderObraNueva(id, d){
         <option value="Vendida"${d.estado==='Vendida'?' selected':''}>Vendida</option>
         <option value="Reservada"${d.estado==='Reservada'?' selected':''}>Reservada</option>
       </select>
+      <div class="adm-prw"><span class="adm-prl">Precio $</span><input class="adm-pr" type="number" value="${d.precio}" min="0"/></div>
       <button class="adm-up" onclick="eliminarObraNueva('${id}','${d.nombre.replace(/'/g,"\\'")}')" style="background:transparent;color:var(--b);border:1px solid rgba(110,31,43,.25)">Eliminar obra</button>`;
     adm.appendChild(row);
   }
@@ -480,6 +545,7 @@ async function eliminarObraNueva(id, nombre){
     if(db) await db.collection('obras_nuevas').doc(id).delete();
     document.getElementById('sk-'+id)?.remove();
     document.getElementById('adm-'+id)?.remove();
+    delete NUEVAS[id];
   } catch(e){ alert('Error al eliminar: '+e.message); }
 }
 
@@ -555,8 +621,10 @@ async function cargarDesdeFirebase(){
     const snap = await db.collection('obras').get();
     snap.forEach(doc=>{
       const d = doc.data();
-      if(d.estado) aplicarEstadoUI(doc.id, d.estado);
+      if(OBRAS[doc.id] && typeof d.precio==='number') OBRAS[doc.id].precio = d.precio;
+      aplicarEstadoUI(doc.id, d.estado || OBRAS[doc.id]?.estado || 'Disponible');
       if(d.fotoUrl) aplicarFotoUI(doc.id, d.fotoUrl);
+      if(typeof d.oculta==='boolean') aplicarOcultaUI(doc.id, d.oculta);
     });
     // Obras nuevas
     const nuevas = await db.collection('obras_nuevas').orderBy('fecha').get().catch(()=>db.collection('obras_nuevas').get());
