@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="css/styles.css"/>
+<link rel="stylesheet" href="css/styles.css?v=6"/>
 </head>
 <body>
 
@@ -17,7 +17,7 @@
 <div id="lb">
   <div class="lbwrap">
     <button class="lbx" onclick="closeLB()">✕</button>
-    <img id="lb-img" src="" alt="" style="display:none"/>
+    <img id="lb-img" alt="" style="display:none"/>
     <video id="lb-vid" controls style="display:none;max-width:100%;max-height:80vh"></video>
     <div class="lbcap" id="lb-cap"></div>
   </div>
@@ -66,11 +66,13 @@
 <nav>
   <a href="#" class="logo"><img src="images/logo-signature-beige.png" alt="Liz Melly"/></a>
   <div class="nl">
+    <div class="nlinks" onclick="if(event.target.tagName==='A')this.closest('nav').classList.remove('open')">
     <a href="#coleccion"      data-es="Colección"      data-en="Collection">Colección</a>
     <a href="#personalizados" data-es="Personalizados"  data-en="Commissions">Personalizados</a>
     <a href="#servicios"      data-es="Servicios"       data-en="Services">Servicios</a>
     <a href="#ventas"         data-es="Tienda"          data-en="Shop">Tienda</a>
     <a href="#contacto"       data-es="Contacto"        data-en="Contact">Contacto</a>
+    </div>
     <div class="lw" id="lw">
       <button class="lbtn" onclick="togLang()"><span id="ll">🇨🇴 ES</span><span class="la" id="la">▾</span></button>
       <div class="ldrop" id="ld">
@@ -83,6 +85,7 @@
       <span data-es="Carrito" data-en="Cart">Carrito</span>
       <span class="cartct" id="cc">0</span>
     </button>
+    <button class="navtoggle" onclick="this.closest('nav').classList.toggle('open')" aria-label="Menú">☰</button>
   </div>
 </nav>
 
@@ -213,12 +216,12 @@
   <h2 class="tti" data-es="Proyectos Especiales" data-en="Special Projects">Proyectos Especiales</h2>
   <div class="rli"></div>
   <div class="vgr">
-    <div class="vc fu" onclick="openVid('images/video-rainforest-proceso.mp4','Proyecto Rainforest')"><div class="vth"><img src="images/obra-pura-vida.jpg" alt="Rainforest" style="object-position:center"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proyecto Rainforest" data-en="Rainforest Project">Proyecto Rainforest</div><div class="vmd">video</div></div></div>
-    <div class="vc fu d1" onclick="openVid('images/PROCESO2.mp4','Proceso · Obra en progreso')"><div class="vth"><img src="images/PROCESO.jpeg" alt="Proceso" style="object-position:top"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Obra en progreso" data-en="Process · Work in progress">Proceso · Obra en progreso</div><div class="vmd">video</div></div></div>
-    <div class="vc fu d2" onclick="openVid('images/PROCESO3.mp4','Proceso · Técnica y color')"><div class="vth"><img src="images/obra-destello-azul.jpg" alt="Proceso" style="object-position:center"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Técnica y color" data-en="Process · Technique &amp; color">Proceso · Técnica y color</div><div class="vmd">video</div></div></div>
-    <div class="vc fu" onclick="openVid('images/PROCESO4.mp4','Studio Tour · Fontana CA')"><div class="vth"><img src="images/obra-flor-poderosa.jpg" alt="Studio" style="object-position:top"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Studio tour · Fontana, CA" data-en="Studio tour · Fontana, CA">Studio tour · Fontana, CA</div><div class="vmd">video</div></div></div>
-    <div class="vc fu d1" onclick="openVid('images/PROCESO-HERMANA.mp4','Proceso · Retrato')"><div class="vth"><img src="images/HERMANA.jpeg" alt="Proceso Hermana" style="object-position:top"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Retrato" data-en="Process · Portrait">Proceso · Retrato</div><div class="vmd">video</div></div></div>
-    <div class="vc fu d2" onclick="openVid('images/FINCA-COLOMBIANA.mp4','Finca Colombiana')"><div class="vth"><img src="images/obra-amor-conexion.jpg" alt="Finca" style="object-position:center"/><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Finca Colombiana · Proyecto" data-en="Colombian Finca · Project">Finca Colombiana · Proyecto</div><div class="vmd">video</div></div></div>
+    <div class="vc fu" onclick="openVid('images/video-rainforest-proceso.mp4','Proyecto Rainforest')"><div class="vth"><video src="images/video-rainforest-proceso.mp4#t=0.5" muted preload="metadata" playsinline></video><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proyecto Rainforest" data-en="Rainforest Project">Proyecto Rainforest</div><div class="vmd">video</div></div></div>
+    <div class="vc fu d1" onclick="openVid('images/PROCESO2.mp4','Proceso · Obra en progreso')"><div class="vth"><video src="images/PROCESO2.mp4#t=0.5" muted preload="metadata" playsinline></video><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Obra en progreso" data-en="Process · Work in progress">Proceso · Obra en progreso</div><div class="vmd">video</div></div></div>
+    <div class="vc fu d2" onclick="openVid('images/PROCESO3.mp4','Proceso · Técnica y color')"><div class="vth"><video src="images/PROCESO3.mp4#t=0.5" muted preload="metadata" playsinline></video><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Técnica y color" data-en="Process · Technique &amp; color">Proceso · Técnica y color</div><div class="vmd">video</div></div></div>
+    <div class="vc fu" onclick="openVid('images/PROCESO4.mp4','Studio Tour · Fontana CA')"><div class="vth"><video src="images/PROCESO4.mp4#t=0.5" muted preload="metadata" playsinline></video><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Studio tour · Fontana, CA" data-en="Studio tour · Fontana, CA">Studio tour · Fontana, CA</div><div class="vmd">video</div></div></div>
+    <div class="vc fu d1" onclick="openVid('images/PROCESO-HERMANA.mp4','Proceso · Retrato')"><div class="vth"><video src="images/PROCESO-HERMANA.mp4#t=0.5" muted preload="metadata" playsinline></video><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Proceso · Retrato" data-en="Process · Portrait">Proceso · Retrato</div><div class="vmd">video</div></div></div>
+    <div class="vc fu d2" onclick="openVid('images/FINCA-COLOMBIANA.mp4','Finca Colombiana')"><div class="vth"><video src="images/FINCA-COLOMBIANA.mp4#t=0.5" muted preload="metadata" playsinline></video><div class="vplay"><div class="vplaybtn">▶</div></div></div><div class="vmeta"><div class="vmn" data-es="Finca Colombiana · Proyecto" data-en="Colombian Finca · Project">Finca Colombiana · Proyecto</div><div class="vmd">video</div></div></div>
   </div>
 </section>
 
@@ -241,7 +244,7 @@
       </div>
     </div>
     <div class="tc fu d2" onclick="openVid('images/CLIENTE-FELIZ-2.mp4','Testimonio en video')">
-      <div class="tph"><div class="tvid"><div class="vplaybtn" style="width:48px;height:48px;font-size:18px">▶</div><div style="font-family:var(--fd);font-style:italic;font-size:14px;color:rgba(232,220,207,.6);margin-top:8px" data-es="Video testimonio" data-en="Video testimonial">Video testimonio</div></div></div>
+      <div class="tph"><video src="images/CLIENTE-FELIZ-2.mp4#t=0.5" muted preload="metadata" playsinline style="width:100%;height:100%;object-fit:cover"></video><div class="tvid" style="background:rgba(20,5,8,.42)"><div class="vplaybtn" style="width:48px;height:48px;font-size:18px">▶</div><div style="font-family:var(--fd);font-style:italic;font-size:14px;color:rgba(255,255,255,.85);margin-top:8px" data-es="Video testimonio" data-en="Video testimonial">Video testimonio</div></div></div>
     </div>
   </div>
 </section>
