@@ -330,6 +330,7 @@ async function toggleOcultar(btn){
 /* ── Aplica una foto nueva (URL de Cloudinary) a todas las imágenes de esa obra ── */
 function aplicarFotoUI(nombre, url){
   if(!url) return;
+  FOTO_OBRA[nombre] = url;
   document.querySelectorAll('img[alt]').forEach(img=>{
     if(img.alt.trim().toLowerCase()===nombre.trim().toLowerCase()) img.src = url;
   });
@@ -350,7 +351,7 @@ async function guardarCambios(btn){
   btn.textContent = 'Guardando...'; btn.disabled = true;
   try{
     // Obras fijas
-    const cards = document.querySelectorAll('#adpn .adm-gr .adm-o');
+    const cards = document.querySelectorAll('#adpn .adm-gr .adm-o:not(.adm-po)');
     for(const card of cards){
       const nombre = card.querySelector('.adm-on').textContent.trim();
       const estado = card.querySelector('.adm-sl').value;
@@ -370,6 +371,24 @@ async function guardarCambios(btn){
       await db.collection('obras_nuevas').doc(id).set({ estado, precio }, { merge:true });
       if(NUEVAS[id]){ NUEVAS[id].estado=estado; NUEVAS[id].precio=precio; aplicarNuevaUI(id); }
     }
+    // Prints: estado + tamaños + precios editables
+    const pcards = document.querySelectorAll('#admPrintsGrid .adm-po[data-id]');
+    for(const card of pcards){
+      const id = card.getAttribute('data-id');
+      const p = PRINTS.find(x=>x.id===id);
+      if(!p) continue;
+      const estado = card.querySelector('.adm-po-estado').value;
+      const variantes = [];
+      card.querySelectorAll('.adm-po-var').forEach(v=>{
+        const tamano = v.querySelector('.adm-po-sz').value.trim();
+        const prRaw = v.querySelector('.adm-po-pr').value;
+        const precio = prRaw==='' ? 0 : Number(prRaw);
+        if(tamano) variantes.push({ tamano, precio: precio>=0?precio:0 });
+      });
+      p.estado = estado; p.variantes = variantes;
+      await db.collection('prints').doc(id).set({ nombre:p.nombre, estado, variantes, oculta:!!p.oculta, fija:!!p.fija }, { merge:true });
+    }
+    renderPrints();
     btn.textContent = '✅ Guardado';
     setTimeout(()=>{ btn.textContent = original; btn.disabled = false; }, 2500);
   } catch(e){
@@ -635,7 +654,26 @@ async function cargarDesdeFirebase(){
     // Videos
     const vids = await db.collection('videos').orderBy('fecha').get().catch(()=>db.collection('videos').get());
     vids.forEach(doc=>renderVideoNuevo(doc.id, doc.data().url, doc.data().nombre));
+    // Prints
+    try{
+      const psnap = await db.collection('prints').get();
+      psnap.forEach(doc=>{
+        const d = doc.data();
+        const ex = PRINTS.find(p=>p.id===doc.id);
+        if(ex){
+          if(d.nombre) ex.nombre = d.nombre;
+          if(Array.isArray(d.variantes)) ex.variantes = d.variantes;
+          if(d.estado) ex.estado = d.estado;
+          if(typeof d.oculta==='boolean') ex.oculta = d.oculta;
+          if(d.fotoUrl) ex.fotoUrl = d.fotoUrl;
+        } else {
+          PRINTS.push({ id:doc.id, nombre:d.nombre||'Print', img:'', fotoUrl:d.fotoUrl||null, estado:d.estado||'Disponible', oculta:!!d.oculta, fija:false, variantes:Array.isArray(d.variantes)?d.variantes:[], fecha:d.fecha });
+        }
+      });
+    } catch(e){ console.warn('Prints carga:', e.message); }
   } catch(e){ console.warn('Firebase carga:', e.message); }
+  renderPrints();
+  renderPrintsAdmin();
 }
 document.addEventListener('DOMContentLoaded', cargarDesdeFirebase);
 if(document.readyState!=='loading') cargarDesdeFirebase();
@@ -646,3 +684,191 @@ const obs=new IntersectionObserver(entries=>{
   entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('v'); });
 },{threshold:0.1});
 document.querySelectorAll('.fu').forEach(el=>obs.observe(el));
+
+
+/* ══════════════════════════════════════════════════
+   PRINTS — Gestión editable (precio · estado · tamaños · nuevos)
+   Colección Firebase: "prints" (doc por print, id estable)
+   ══════════════════════════════════════════════════ */
+
+/* Registro base de los prints (idéntico a lo que ya se mostraba) */
+var PRINTS_DEFAULT = [
+  { id:'instinto-en-calma',  nombre:'Instinto en Calma',        img:'images/obra-instinto-en-calma.jpg', estado:'Disponible', oculta:false, fija:true, variantes:[{tamano:'Print 16"×20"',precio:30},{tamano:'Print 8.5"×11"',precio:20}] },
+  { id:'pura-vida',          nombre:'Pura Vida',                img:'images/obra-pura-vida.jpg',         estado:'Disponible', oculta:false, fija:true, variantes:[{tamano:'Print 16"×20"',precio:30},{tamano:'Print 8.5"×11"',precio:20}] },
+  { id:'flor-poderosa',      nombre:'Flor Poderosa',            img:'images/obra-flor-poderosa.jpg',     estado:'Disponible', oculta:false, fija:true, variantes:[{tamano:'Print 16"×20"',precio:30},{tamano:'Print 8.5"×11"',precio:20}] },
+  { id:'secreto-mirada',     nombre:'El secreto de tu mirada',  img:'images/obra-secreto-mirada.jpg',    estado:'Disponible', oculta:false, fija:true, variantes:[{tamano:'Print 11"×14"',precio:25},{tamano:'Print 8.5"×11"',precio:20}] },
+  { id:'presencia',          nombre:'Presencia',                img:'images/obra-amor-conexion.jpg',     estado:'Disponible', oculta:false, fija:true, variantes:[{tamano:'Print 12"×12"',precio:15}] },
+  { id:'destello-azul',      nombre:'Destello Azul',            img:'images/obra-destello-azul.jpg',     estado:'Disponible', oculta:false, fija:true, variantes:[{tamano:'Print 16"×20"',precio:30},{tamano:'Print 8.5"×11"',precio:25}] }
+];
+var PRINTS = JSON.parse(JSON.stringify(PRINTS_DEFAULT));
+var FOTO_OBRA = {};   // fotos personalizadas de originales (para que el print use la misma imagen)
+
+function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _slugify(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'print'; }
+function _printImg(p){ return p.fotoUrl || FOTO_OBRA[p.nombre] || p.img || 'images/logo-signature.png'; }
+
+/* ── Pinta la lista pública de prints ── */
+function renderPrints(){
+  const list = document.querySelector('.print-obra-list');
+  if(!list) return;
+  const vis = PRINTS.filter(p=>!p.oculta);
+  list.innerHTML = vis.map(p=>{
+    const display = _printImg(p);
+    if(display && p.nombre) artImg[p.nombre] = display;   // miniatura del carrito
+    const rows = (p.variantes||[]).map(v=>{
+      const accion = p.estado==='Agotado'
+        ? `<span class="poa-btn" style="opacity:.5;border-style:dashed;cursor:default" data-es="Agotado" data-en="Sold out">Agotado</span>`
+        : `<button class="poa-btn" data-cart-name="${_esc(p.nombre+' · '+v.tamano)}" data-cart-price="${_esc(v.precio)}" data-es="+ Carrito" data-en="+ Cart">+ Carrito</button>`;
+      return `<div class="poa-row"><span class="poa-sz">${_esc(v.tamano)}</span><span class="poa-pr">$${_esc(v.precio)}</span>${accion}</div>`;
+    }).join('');
+    return `<div class="poa"><div class="poa-img" data-lb-src="${_esc(display)}" data-lb-cap="${_esc(p.nombre)}"><img src="${_esc(display)}" alt="${_esc(p.nombre)}"/></div><div class="poa-info"><div class="poa-name">${_esc(p.nombre)}</div>${rows}</div></div>`;
+  }).join('');
+  if(typeof lang!=='undefined' && lang!=='es'){
+    list.querySelectorAll('[data-'+lang+']').forEach(el=>{ el.innerHTML = el.getAttribute('data-'+lang); });
+  }
+}
+
+/* Delegación de clics para la lista pública (una sola vez) */
+var _printListInit = false;
+function initPrintList(){
+  if(_printListInit) return;
+  const list = document.querySelector('.print-obra-list');
+  if(!list) return;
+  list.addEventListener('click', e=>{
+    const add = e.target.closest('[data-cart-name]');
+    if(add){ addC(add.dataset.cartName, Number(add.dataset.cartPrice)); return; }
+    const img = e.target.closest('[data-lb-src]');
+    if(img){ openLB(img.dataset.lbSrc, img.dataset.lbCap); }
+  });
+  _printListInit = true;
+}
+
+/* ── Pinta las tarjetas de gestión de prints en el panel admin ── */
+function renderPrintsAdmin(){
+  const grid = document.getElementById('admPrintsGrid');
+  if(!grid) return;
+  grid.innerHTML = PRINTS.map(p=>{
+    const vars = (p.variantes||[]).map(v=>
+      `<div class="adm-po-var"><input class="adm-po-sz" type="text" value="${_esc(v.tamano)}" placeholder="Tamaño"/><span class="adm-po-cur">$</span><input class="adm-po-pr" type="number" min="0" value="${_esc(v.precio)}"/><button class="adm-po-del" onclick="removePrintVarRow(this)" title="Quitar tamaño">×</button></div>`
+    ).join('');
+    const ocultaBtn = `<button class="adm-up adm-oc${p.oculta?' on':''}" onclick="togglePrintOcultar(this)">${p.oculta?'👁 Mostrar en la página':'Ocultar de la página'}</button>`;
+    const delBtn = p.fija ? '' : `<button class="adm-up" onclick="eliminarPrint(this)" style="border-style:solid;border-color:rgba(110,31,43,.25);color:var(--b)">Eliminar print</button>`;
+    return `<div class="adm-po" data-id="${_esc(p.id)}">
+      <div class="adm-on">${_esc(p.nombre)}</div>
+      <select class="adm-sl adm-po-estado">
+        <option value="Disponible"${p.estado!=='Agotado'?' selected':''}>Disponible</option>
+        <option value="Agotado"${p.estado==='Agotado'?' selected':''}>Agotado</option>
+      </select>
+      <div class="adm-po-vars">${vars}</div>
+      <button class="adm-up adm-po-addvar" onclick="addPrintVarRow(this)">+ Agregar tamaño</button>
+      ${ocultaBtn}
+      <button class="adm-up" onclick="subirFotoPrint(this)">+ Subir / cambiar foto</button>
+      ${delBtn}
+    </div>`;
+  }).join('');
+}
+
+/* Agregar / quitar una fila de tamaño en el formulario (se guarda con "Guardar cambios") */
+function addPrintVarRow(btn){
+  const vars = btn.closest('.adm-po').querySelector('.adm-po-vars');
+  vars.insertAdjacentHTML('beforeend',
+    `<div class="adm-po-var"><input class="adm-po-sz" type="text" value="" placeholder='Tamaño (ej: Print 16"×20")'/><span class="adm-po-cur">$</span><input class="adm-po-pr" type="number" min="0" value=""/><button class="adm-po-del" onclick="removePrintVarRow(this)" title="Quitar tamaño">×</button></div>`);
+}
+function removePrintVarRow(btn){ const r = btn.closest('.adm-po-var'); if(r) r.remove(); }
+
+/* Ocultar / mostrar un print (inmediato) */
+async function togglePrintOcultar(btn){
+  const id = btn.closest('.adm-po').getAttribute('data-id');
+  const p = PRINTS.find(x=>x.id===id); if(!p) return;
+  const oculta = !p.oculta;
+  if(oculta && !confirm('¿Ocultar el print "'+p.nombre+'" de la tienda? Podrá volver a mostrarlo cuando quiera.')) return;
+  try{
+    if(db) await db.collection('prints').doc(id).set({ nombre:p.nombre, oculta }, { merge:true });
+    p.oculta = oculta;
+    btn.textContent = oculta ? '👁 Mostrar en la página' : 'Ocultar de la página';
+    btn.classList.toggle('on', oculta);
+    renderPrints();
+  } catch(e){ alert('Error: '+e.message); }
+}
+
+/* Subir / cambiar la foto de un print (inmediato) */
+function subirFotoPrint(btn){
+  const id = btn.closest('.adm-po').getAttribute('data-id');
+  const p = PRINTS.find(x=>x.id===id); if(!p) return;
+  pickFile('image/*', false, async(files)=>{
+    const file = files[0]; if(!file) return;
+    const original = btn.textContent; btn.textContent='Subiendo...'; btn.disabled=true;
+    try{
+      const url = await subirACloudinary(file, 'image', 'prints');
+      if(db) await db.collection('prints').doc(id).set({ nombre:p.nombre, fotoUrl:url }, { merge:true });
+      p.fotoUrl = url; renderPrints();
+      btn.textContent='✅ Foto actualizada'; setTimeout(()=>{ btn.textContent=original; btn.disabled=false; }, 3000);
+    } catch(err){ btn.textContent=original; btn.disabled=false; alert('Error al subir la foto: '+err.message); }
+  });
+}
+
+/* Eliminar un print nuevo (inmediato) */
+async function eliminarPrint(btn){
+  const id = btn.closest('.adm-po').getAttribute('data-id');
+  const p = PRINTS.find(x=>x.id===id); if(!p) return;
+  if(!confirm('¿Eliminar el print "'+p.nombre+'"? Esta acción no se puede deshacer.')) return;
+  try{
+    if(db) await db.collection('prints').doc(id).delete();
+    const i = PRINTS.findIndex(x=>x.id===id); if(i>=0) PRINTS.splice(i,1);
+    renderPrints(); renderPrintsAdmin();
+  } catch(e){ alert('Error al eliminar: '+e.message); }
+}
+
+/* Modal "Nuevo print" */
+function nuevoPrint(){
+  const modal = document.createElement('div');
+  modal.id = 'npModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:4px;padding:28px;width:100%;max-width:480px;font-family:var(--fn)">
+      <h3 style="font-family:var(--fd);font-style:italic;color:var(--b);font-size:22px;margin-bottom:6px">Nuevo print</h3>
+      <p style="font-size:11px;color:var(--md);margin-bottom:18px;line-height:1.5">Podrá agregar más tamaños después desde el panel.</p>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Foto del print</label>
+      <input id="np-foto" type="file" accept="image/*" style="width:100%;margin-bottom:14px;font-size:13px"/>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Nombre de la obra *</label>
+      <input id="np-nombre" type="text" placeholder="Ej: Amanecer" style="width:100%;padding:10px 12px;border:1px solid rgba(110,31,43,.2);font-size:14px;margin-bottom:12px;border-radius:1px;font-family:var(--fn)"/>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Tamaño *</label>
+      <input id="np-tamano" type="text" placeholder='Ej: Print 16"×20"' style="width:100%;padding:10px 12px;border:1px solid rgba(110,31,43,.2);font-size:14px;margin-bottom:12px;border-radius:1px;font-family:var(--fn)"/>
+      <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);display:block;margin-bottom:4px">Precio ($) *</label>
+      <input id="np-precio" type="number" placeholder="Ej: 30" style="width:100%;padding:10px 12px;border:1px solid rgba(110,31,43,.2);font-size:14px;margin-bottom:20px;border-radius:1px;font-family:var(--fn)"/>
+      <div style="display:flex;gap:10px">
+        <button id="np-guardar" onclick="guardarNuevoPrint(this)" style="flex:1;background:var(--b);color:#fff;padding:11px;font-family:var(--fn);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:1px;cursor:pointer">Guardar print</button>
+        <button onclick="document.getElementById('npModal').remove()" style="flex:1;background:transparent;color:var(--b);padding:11px;font-family:var(--fn);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid rgba(110,31,43,.2);border-radius:1px;cursor:pointer">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function guardarNuevoPrint(btn){
+  const nombre = document.getElementById('np-nombre').value.trim();
+  const tamano = document.getElementById('np-tamano').value.trim();
+  const precioRaw = document.getElementById('np-precio').value;
+  const foto = document.getElementById('np-foto').files[0];
+  if(!nombre || !tamano || precioRaw===''){ alert('El nombre, el tamaño y el precio son obligatorios.'); return; }
+  if(!db){ alert('Sin conexión a la base de datos. Revise su internet.'); return; }
+  btn.textContent = 'Subiendo...'; btn.disabled = true;
+  try{
+    let fotoUrl = null;
+    if(foto) fotoUrl = await subirACloudinary(foto, 'image', 'prints');
+    const id = _slugify(nombre)+'-'+Date.now();
+    const datos = { nombre, fotoUrl, estado:'Disponible', oculta:false, fija:false, variantes:[{ tamano, precio:Number(precioRaw) }], fecha:new Date().toISOString() };
+    await db.collection('prints').doc(id).set(datos);
+    PRINTS.push(Object.assign({ id, img:'' }, datos));
+    renderPrints(); renderPrintsAdmin();
+    document.getElementById('npModal').remove();
+    alert('✅ Print "'+nombre+'" agregado. Ya aparece en la tienda.');
+  } catch(e){
+    btn.textContent = 'Guardar print'; btn.disabled = false;
+    alert('Error: '+e.message);
+  }
+}
+
+/* Pintado inicial (con los valores por defecto; Firebase los actualiza al cargar) */
+function _initPrints(){ renderPrints(); renderPrintsAdmin(); initPrintList(); }
+document.addEventListener('DOMContentLoaded', _initPrints);
+if(document.readyState!=='loading') _initPrints();

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="css/styles.css?v=6"/>
+<link rel="stylesheet" href="css/styles.css?v=8"/>
 </head>
 <body>
 
@@ -50,9 +50,13 @@
           <div class="adm-o"><div class="adm-on" data-obra="Pura Vida">Pura Vida</div><select class="adm-sl"><option value="Disponible">Disponible</option><option value="Vendida">Vendida</option><option value="Reservada">Reservada</option></select><div class="adm-prw"><span class="adm-prl">Precio $</span><input class="adm-pr" type="number" value="200" min="0"/></div><button class="adm-up adm-oc" onclick="toggleOcultar(this)">Ocultar de la página</button><button class="adm-up" onclick="subirFotoAdmin(this, this.closest('.adm-o').querySelector('.adm-on').textContent)">+ Subir / cambiar foto</button></div>
         </div>
         <div id="admNuevas"></div>
+        <div class="adm-nt">Prints</div>
+        <p style="font-family:var(--fn);font-size:11px;color:var(--md);margin:-4px 0 10px;line-height:1.5">Cambia precios y estado, agrega o quita tamaños, o sube prints nuevos. Los cambios de precio, tamaño y estado se guardan con “Guardar cambios”.</p>
+        <div id="admPrintsGrid"></div>
         <div class="adm-ac">
           <button class="abt" onclick="guardarCambios(this)">Guardar cambios</button>
           <button class="abt s" onclick="nuevaObraAdmin()">+ Nueva obra</button>
+          <button class="abt s" onclick="nuevoPrint()">+ Nuevo print</button>
           <button class="abt s" onclick="subirPersonalizados()">Subir personalizados</button>
           <button class="abt s" onclick="subirVideos()">Subir videos</button>
           <button class="abt s" onclick="closeAd();lockAd()">Cerrar sesión</button>
@@ -393,6 +397,6 @@
   <!-- Firebase CDN -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=3"></script>
 </body>
 </html>

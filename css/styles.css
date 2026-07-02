@@ -386,3 +386,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;background:var(--b);height:5
 .adm-oc.on{border-style:solid;border-color:var(--b);color:var(--b);background:rgba(110,31,43,.06)}
 
 @media(max-width:560px){.am{column-count:1}}
+
+/* ── ADMIN: gestión de prints ── */
+.adm-nt{font-family:var(--fn);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b);margin:22px 0 8px;opacity:.75}
+#admPrintsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.adm-po{min-width:0;background:var(--bs);border:1px solid rgba(110,31,43,.1);padding:14px;border-radius:1px}
+.adm-po-vars{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.adm-po-var{display:flex;align-items:center;gap:6px;min-width:0}
+.adm-po-sz{flex:1;min-width:0;padding:6px 8px;border:1px solid rgba(110,31,43,.18);font-size:10.5px;font-family:var(--fn);color:var(--tx);background:#fff;border-radius:1px}
+.adm-po-cur{font-size:11px;color:var(--md)}
+.adm-po-pr{width:70px;flex-shrink:0;padding:6px 8px;border:1px solid rgba(110,31,43,.18);font-size:11px;font-family:var(--fn);color:var(--tx);background:#fff;border-radius:1px}
+.adm-po-del{width:26px;height:28px;flex-shrink:0;border:1px solid rgba(110,31,43,.18);background:#fff;color:var(--md);border-radius:1px;font-size:15px;line-height:1;cursor:pointer;transition:all .15s}
+.adm-po-del:hover{background:var(--b);color:#fff;border-color:var(--b)}
+.adm-po-addvar{margin-bottom:8px}
+@media(max-width:640px){#admPrintsGrid{grid-template-columns:1fr}}
