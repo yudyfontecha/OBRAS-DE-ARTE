@@ -330,19 +330,41 @@ async function toggleOcultar(btn){
 /* ── Aplica una foto nueva (URL de Cloudinary) a todas las imágenes de esa obra ── */
 function aplicarFotoUI(nombre, url){
   if(!url) return;
+  /* Verifica que la foto EXISTA antes de reemplazar la original.
+     Si la dirección está rota o borrada, no se toca nada y la obra
+     conserva su imagen del repositorio. */
+  const probe = new Image();
+  probe.onload = ()=>{ _swapFoto(nombre, url); };
+  probe.onerror = ()=>{ console.warn('Foto no disponible para "'+nombre+'", se conserva la original.'); };
+  probe.src = url;
+}
+
+function _swapFoto(nombre, url){
   FOTO_OBRA[nombre] = url;
   document.querySelectorAll('img[alt]').forEach(img=>{
-    if(img.alt.trim().toLowerCase()===nombre.trim().toLowerCase()) img.src = url;
+    if(img.alt.trim().toLowerCase()===nombre.trim().toLowerCase()){
+      if(!img.dataset.orig) img.dataset.orig = img.src;
+      img.src = url;
+    }
   });
-  // Galería y tienda usan alt exacto; lightbox onclick de tienda
   document.querySelectorAll('#tp-ori .sk').forEach(sk=>{
     const n = sk.querySelector('.sn');
     if(n && n.textContent.trim().toLowerCase().startsWith(nombre.toLowerCase().substring(0,10))){
-      const img = sk.querySelector('.ski img'); if(img) img.src = url;
+      const img = sk.querySelector('.ski img');
+      if(img){ if(!img.dataset.orig) img.dataset.orig = img.src; img.src = url; }
       const ski = sk.querySelector('.ski'); if(ski) ski.onclick = ()=>openLB(url, nombre);
     }
   });
 }
+
+/* Red de seguridad: si CUALQUIER imagen de la página falla al cargar,
+   vuelve automáticamente a la original del repositorio. */
+document.addEventListener('error', function(e){
+  const img = e.target;
+  if(img && img.tagName === 'IMG' && img.dataset.orig && img.src !== img.dataset.orig){
+    img.src = img.dataset.orig;
+  }
+}, true);
 
 /* ── GUARDAR CAMBIOS (estados de las 6 obras + obras nuevas) ── */
 async function guardarCambios(btn){
